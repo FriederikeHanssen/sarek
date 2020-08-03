@@ -2,7 +2,7 @@ process QUALIMAP_BAMQC {
     label 'memory_max'
     label 'cpus_16'
 
-    //tag "${meta.id}"
+    tag "${meta.id}"
 
     publishDir "${params.outdir}/Reports/${meta.id}/bamQC", mode: params.publish_dir_mode
 
@@ -13,10 +13,8 @@ process QUALIMAP_BAMQC {
      output:
          path("${bam.baseName}") 
 
-    // //when: !('bamqc' in skip_qc)
-
      script:
-     use_bed = ''//params.target_bed ? "-gff ${targetBED}" : ''
+     use_bed = params.target_bed ? "-gff ${targetBED}" : ''
      """
      qualimap --java-mem-size=${task.memory.toGiga()}G \
         bamqc \

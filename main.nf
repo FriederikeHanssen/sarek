@@ -419,7 +419,7 @@ workflow {
 
     // STEP 1.5: MERGING AND INDEXING BAM FROM MULTIPLE LANES 
     
-    bam_mapped = bam_single.mix(MERGE_BAM_MAPPED(bam_multiple))
+    bam_mapped = bam_single.mix(MERGE_BAM_MAPPED(bam_multiple, ""))
     //if(save_bam_mapped || !(params.known_indels))
     //TODO: https://github.com/nf-core/sarek/blob/bce378e09de25bb26c388b917f93f84806d3ba27/main.nf#L1478
     //But  if SAMTOOLS_INDEX is not run, markduplicates does not work
@@ -475,7 +475,7 @@ workflow {
 
     // STEP 4.5: MERGING AND INDEXING THE RECALIBRATED BAM FILES
     if (!(params.no_intervals)){
-        MERGE_BAM_RECAL(APPLYBQSR.out)
+        MERGE_BAM_RECAL(APPLYBQSR.out, ".recal")
         SAMTOOLS_INDEX_RECAL(MERGE_BAM_RECAL.out)
     }else{
         SAMTOOLS_INDEX_RECAL(APPLYBQSR.out)
