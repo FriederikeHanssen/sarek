@@ -25,7 +25,7 @@ include { MD_ADAM} from '../local/md_adam.nf' addParams( options: params.md_adam
 include { MD_GATK_BAM} from '../local/md_gatk_bam.nf' //addParams( )
 include { MD_ADAM_BAM} from '../local/md_adam_bam.nf' //addParams( )
 include { MD_SAMBAMBA} from '../local/md_sambamba.nf' //addParams( )
-// include { MD_SAMBLASTER} from '../local/md_samblaster.nf' //addParams(  )
+include { MD_SAMBLASTER} from '../local/md_samblaster.nf' //addParams(  )
 
 include { CONVERT_TO_CRAM } from '../local/cram_conversion.nf'
 workflow PREPROCESSING {
