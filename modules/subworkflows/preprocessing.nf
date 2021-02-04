@@ -1,7 +1,7 @@
 
 params.seqkit_options        = [:]
 params.dict_options          = [:]
-params.fai_options          = [:]
+//params.fai_options          = [:]
 params.bwamem2_options       = [:]
 params.bwamem2_index_options = [:]
 // params.md_gatk_options       = [:] 
@@ -12,7 +12,8 @@ include { SPLIT_FASTQ     } from '../local/splitfastq.nf' addParams( options: pa
 include { DICT }            from '../local/gatk_createsequencedictionary' addParams( options: params.dict_options  )
 include { SAMTOOLS_FAIDX }  from '../local/create_fai.nf' addParams( options: params.fai_options  )
 
-include { MAP     } from '../local/mapping.nf' addParams( options: params.bwamem2_options  )
+include { MAP_BAM     } from '../local/mapping_bam.nf' addParams( options: params.bwamem2_options  )
+include { MAP_CRAM     } from '../local/mapping_cram.nf' addParams( options: params.bwamem2_options  )
 include { BWAMEM2_INDEX   } from '../local/index.nf' addParams ( options: params.bwamem2_index_options )
 
 include { MERGE_CRAM as MERGE_CRAM_SAMTOOLS } from '../local/merge_samtools.nf' //addParams()
@@ -56,11 +57,21 @@ workflow PREPROCESSING {
         
         //index.dump(tag: 'INDEX')
         //fasta.dump()
-        MAP(split_reads, fasta, index)
+        mapped_grouped = Channel.empty()
+        if(params.skip_merge && params.cram) {
+            MAP_CRAM(split_reads, fasta, index)
 
-        //Does the channel have to be merged somehow?
-        //mapped = MAP.out
-        mapped_grouped = MAP.out.groupTuple()
+            //Does the channel have to be merged somehow?
+            //mapped = MAP.out
+            mapped_grouped = MAP_CRAM.out.groupTuple()
+        }
+        else{
+            MAP_BAM(split_reads, fasta, index)
+
+            //Does the channel have to be merged somehow?
+            //mapped = MAP.out
+            mapped_grouped = MAP_BAM.out.groupTuple()    
+        }
 
         // Step 3: Merging Bams/Converting Bams
         // Step 4: MarkDuplicates
@@ -68,18 +79,21 @@ workflow PREPROCESSING {
 
 
         if (params.cram) { //Convert to CRAM after merging (green path)
-            merge_cram_out = MERGE_CRAM_SAMTOOLS(mapped_grouped, fasta) //right now this is not merging but only conversion to cram
+            cram_out = mapped_grouped
+
+            if (!params.skip_merge){
+                cram_out = MERGE_CRAM_SAMTOOLS(mapped_grouped, fasta) //right now this is not merging but only conversion to cram
+            }
             //MERGE_CRAM_SAMTOOLS(MAP.out, fasta)
             //TODO: insert: MERGE_CRAM_SAMBAMBA -> create mulled container for that
-            //merge_cram_out = MERGE_CRAM_SAMTOOLS.out.groupTuple()
             dict = params.dict ? file(params.dict) : DICT(fasta)
-            faidx = params.faidx ? file(params.faidx) : SAMTOOLS_FAIDX(fasta)
-             if(params.md_gatk){
-                 
-                 duplicate_marked_cram = MD_GATK(merge_cram_out, fasta, dict, faidx)
-             }else{
+            faidx = params.faidx ? file(params.faidx) : SAMTOOLS_FAIDX(fasta) 
+
+            if(params.md_gatk){
+                 duplicate_marked_cram = MD_GATK(cram_out, fasta, dict, faidx)
+            }else{
                 if(params.md_adam){
-                    duplicate_marked_cram = MD_ADAM(merge_cram_out, fasta, dict, faidx)
+                   duplicate_marked_cram = MD_ADAM(cram_out, fasta, dict, faidx)
                 }
             }
         } else { //Merge, Convert to CRAM after MD (blue path)
@@ -89,38 +103,39 @@ workflow PREPROCESSING {
                 faidx = params.faidx ? file(params.faidx) : SAMTOOLS_FAIDX(fasta)
 
                 duplicate_marked = MD_GATK_BAM(mapped_grouped, dict, faidx)
-            }else{
-                merge_bam_out = params.merge_samtools ? MERGE_SAMTOOLS_BAM(mapped_grouped) : MERGE_SAMBAMBA_BAM(mapped_grouped)
-                //merge_bam_out.dump()
-                if (params.md_gatk){
-                     dict = params.dict ? file(params.dict) : DICT(fasta)
-                     faidx = params.faidx ? file(params.faidx) : SAMTOOLS_FAIDX(fasta)
+            }//else{
+        //         merge_bam_out = params.merge_samtools ? MERGE_SAMTOOLS_BAM(mapped_grouped) : MERGE_SAMBAMBA_BAM(mapped_grouped)
+        //         //merge_bam_out.dump()
+        //         if (params.md_gatk){
+        //              dict = params.dict ? file(params.dict) : DICT(fasta)
+        //              faidx = params.faidx ? file(params.faidx) : SAMTOOLS_FAIDX(fasta)
 
-                     duplicate_marked = MD_GATK_BAM(merge_bam_out, dict, faidx)
-                } else {
-                    if (params.md_adam){
-                          duplicate_marked = MD_ADAM_BAM(merge_bam_out)
-                    }else{
-                        if(params.md_sambamba){
-                                duplicate_marked = MD_SAMBAMBA(merge_bam_out)
-                        }else { 
-                                duplicate_marked = MD_SAMBLASTER(merge_bam_out)
-                        }
+        //              duplicate_marked = MD_GATK_BAM(merge_bam_out, dict, faidx)
+        //         } else {
+        //             if (params.md_adam){
+        //                   duplicate_marked = MD_ADAM_BAM(merge_bam_out)
+        //             }else{
+        //                 if(params.md_sambamba){
+        //                         duplicate_marked = MD_SAMBAMBA(merge_bam_out)
+        //                 }else { 
+        //                         duplicate_marked = MD_SAMBLASTER(merge_bam_out)
+        //                 }
                         
-                    }
-                }
+        //             }
+                 }
                 
-                //Convert bam to cram, possible piping directly from MD for speed up purposes?
-                CONVERT_TO_CRAM(duplicate_marked, fasta)
-                duplicate_marked_cram = CONVERT_TO_CRAM
-            }
+        //         //Convert bam to cram, possible piping directly from MD for speed up purposes?
+        //         CONVERT_TO_CRAM(duplicate_marked, fasta)
+        //         duplicate_marked_cram = CONVERT_TO_CRAM
+        //     }
             
-        }
+        // }
 
 
 
 
 
     emit:
-        duplicate_marked_cram
+        // duplicate_marked_cram
+        split_reads
 }

@@ -27,7 +27,7 @@ process MERGE_CRAM {
     def name_2 = options.suffix ? "${name}.${options.suffix}" : "${name}"
     """
     samtools merge --threads ${task.cpus} - ${bam} | samtools view -T ${fasta} -C -o ${name_2}.cram -
-     """
+    """
     //    samtools merge --threads ${task.cpus} - ${bam} | samtools view -T ${fasta} -C -o ${name_2}.cram -
         //--> add back in after cram array test
     //TODO this could also be done with sambamba, which is apaprently much faster, all this tool replacement would require quiet a bit of benchmarking etc.

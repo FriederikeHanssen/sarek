@@ -1,14 +1,13 @@
-// Import generic module functions
 include { initOptions; saveFiles; getSoftwareName } from './functions'
 
 params.options = [:]
 def options    = initOptions(params.options)
 
-process MD_GATK_BAM{
-    label 'process_md'
-    publishDir "${params.outdir}",
-        mode: params.publish_dir_mode,
-        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:'mark_duplicates', publish_id:'') }
+process MD_GATK_BAM {
+    label 'process_high'
+
+    publishDir params.outdir, mode: params.publish_dir_mode,
+        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), publish_id:'') }
 
     conda (params.enable_conda ? "bioconda::gatk4-spark=4.1.9.0" : null)
     if (workflow.containerEngine == 'singularity' && !params.pull_docker_container) {

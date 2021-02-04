@@ -117,6 +117,10 @@ if (params.genomes && !params.genomes.containsKey(params.genome) && !params.igen
 
 params.fasta      = params.genome ? params.genomes[params.genome].fasta                   ?: false : false
 fasta             = params.fasta  ? file(params.fasta)             : file("${params.outdir}/no_file")
+fasta.dump()
+
+params.faidx       = params.genome ? params.genomes[params.genome].fasta_fai               ?: false : false
+params.dict        = params.genome ? params.genomes[params.genome].dict                    ?: false : false
 
 
 workflow {

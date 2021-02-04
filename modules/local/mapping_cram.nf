@@ -4,7 +4,7 @@ include { initOptions; saveFiles; getSoftwareName } from './functions'
 params.options = [:]
 def options    = initOptions(params.options)
 
-process MAP{
+process MAP_CRAM{
     label 'process_high'
     publishDir "${params.outdir}",
         mode: params.publish_dir_mode,
@@ -23,7 +23,8 @@ process MAP{
         path (reference)
 
     output:
-        tuple val(name), path ("*.bam")
+        tuple val(name), path ("*.cram")
+
 
     script:
     def software = getSoftwareName(task.process)
@@ -36,7 +37,7 @@ process MAP{
     def readGroup = "@RG\\tID:1\\t${CN}PU:1\\tSM:${name}\\tLB:${name}\\tPL:ILLUMINA"
 
     """
-    bwa-mem2 mem ${options.args} -R \"${readGroup}\" -t ${task.cpus} ${fasta} ${reads} | samtools sort -@ ${task.cpus} -m 64G -o ${name}.${part}.bam -
+    bwa-mem2 mem ${options.args} -R \"${readGroup}\" -t ${task.cpus} ${fasta} ${reads} | samtools sort -@ ${task.cpus} -m 64G - | samtools view -T ${fasta} -C -o ${name}.${part}.cram -
     echo \$(bwa-mem2 version 2>&1) > bwa-mem2.version.txt
     """
     //samtools may need different memory setting -m 2G why not use task.memory: .GB ending throws error, only K/M/G are recognized. harcoding taks.memory = 84G also did not work
