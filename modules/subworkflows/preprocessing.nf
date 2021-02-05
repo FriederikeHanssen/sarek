@@ -103,33 +103,33 @@ workflow PREPROCESSING {
                 faidx = params.faidx ? file(params.faidx) : SAMTOOLS_FAIDX(fasta)
 
                 duplicate_marked = MD_GATK_BAM(mapped_grouped, dict, faidx)
-            }//else{
-        //         merge_bam_out = params.merge_samtools ? MERGE_SAMTOOLS_BAM(mapped_grouped) : MERGE_SAMBAMBA_BAM(mapped_grouped)
-        //         //merge_bam_out.dump()
-        //         if (params.md_gatk){
-        //              dict = params.dict ? file(params.dict) : DICT(fasta)
-        //              faidx = params.faidx ? file(params.faidx) : SAMTOOLS_FAIDX(fasta)
+            }else{
+                merge_bam_out = params.merge_samtools ? MERGE_SAMTOOLS_BAM(mapped_grouped) : MERGE_SAMBAMBA_BAM(mapped_grouped)
+                //merge_bam_out.dump()
+                if (params.md_gatk){
+                     dict = params.dict ? file(params.dict) : DICT(fasta)
+                     faidx = params.faidx ? file(params.faidx) : SAMTOOLS_FAIDX(fasta)
 
-        //              duplicate_marked = MD_GATK_BAM(merge_bam_out, dict, faidx)
-        //         } else {
-        //             if (params.md_adam){
-        //                   duplicate_marked = MD_ADAM_BAM(merge_bam_out)
-        //             }else{
+                     duplicate_marked = MD_GATK_BAM(merge_bam_out, dict, faidx)
+                } else {
+                    if (params.md_adam){
+                          duplicate_marked = MD_ADAM_BAM(merge_bam_out)
+                    //}else{
         //                 if(params.md_sambamba){
         //                         duplicate_marked = MD_SAMBAMBA(merge_bam_out)
         //                 }else { 
         //                         duplicate_marked = MD_SAMBLASTER(merge_bam_out)
         //                 }
                         
-        //             }
+                     }
                  }
                 
         //         //Convert bam to cram, possible piping directly from MD for speed up purposes?
         //         CONVERT_TO_CRAM(duplicate_marked, fasta)
         //         duplicate_marked_cram = CONVERT_TO_CRAM
-        //     }
+             }
             
-        // }
+        }
 
 
 

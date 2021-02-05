@@ -29,7 +29,7 @@ process MAP_BAM{
     script:
     def software = getSoftwareName(task.process)
     //extra = meta.status == 1 ? "-B 3" : "" when tumor than allow for a smaller mismatch penalty...why? will leave by default for now
-    def name = reads.get(0).simpleName
+    def name = reads.get(0).simpleName //TODO: Set name better
     def part = reads.get(0).name.findAll(/part_([0-9]+)?/).last()
 
     //TODO hard coded, needs fix eventually

@@ -6,7 +6,7 @@ def options    = initOptions(params.options)
 
 process MD_ADAM{
     label 'process_high'
-    scratch='/sfs/7/workspace/ws/iizha01-test_splitting-0/babysarek/tmp'
+    //scratch='/sfs/7/workspace/ws/iizha01-test_splitting-0/babysarek/tmp'
 
     publishDir "${params.outdir}",
         mode: params.publish_dir_mode,
@@ -33,8 +33,8 @@ process MD_ADAM{
     def software = getSoftwareName(task.process)
    
     """
-    export SPARK_LOCAL_IP=127.0.0.1
-    export SPARK_PUBLIC_DNS=127.0.0.1
+    #export SPARK_LOCAL_IP=127.0.0.1
+    #export SPARK_PUBLIC_DNS=127.0.0.1
     adam-submit \
        --master local[*] \
        --conf spark.local.dir=. \

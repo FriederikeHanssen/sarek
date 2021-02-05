@@ -34,6 +34,7 @@ process MD_ADAM_BAM{
        --master local[${task.cpus}] \
        --driver-memory ${task.memory.toGiga()}g \
        --conf spark.local.dir=. \
+       --conf spark.jars.ivy=/tmp/.ivy \
        -- \
        transformAlignments \
        -mark_duplicate_reads \

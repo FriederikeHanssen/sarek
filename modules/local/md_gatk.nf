@@ -29,18 +29,21 @@ process MD_GATK {
     //def software = getSoftwareName(task.process)
     //markdup_java_options = "\"-Xms" +  (task.memory.toGiga() / 2   ).trunc() + "g -Xmx" + (task.memory.toGiga() - 1) + "g\""
     def crams = cram.collect(){ x -> "-I ".concat(x.toString()) }.join(" ")
-    def output = options.suffix ? "${name}.${options.suffix}" : "${name}"
+    //def output = options.suffix ? "${name}.${options.suffix}" : "${name}"
     """
     export SPARK_LOCAL_IP=127.0.0.1
     export SPARK_PUBLIC_DNS=127.0.0.1
-
+    
     gatk  \
         MarkDuplicatesSpark \
         ${crams} \
-        -O ${output}.md.cram \
+        -O blub.md.cram \
         --reference ${reference} \
         --allow-multiple-sort-orders-in-input \
-        --tmp-dir .   
+        --tmp-dir . \
+        -- \
+        --conf spark.jars.ivy=/tmp/.ivy \
+        --conf user=1001
     """
 }
 //Possibly not use metrics file, could be a bottleneck: https://sites.google.com/a/broadinstitute.org/legacy-gatk-forum-discussions/2019-02-11-2018-08-12/23441-MarkDuplicateSpark-is-slower-than-normal-MarkDuplicates
