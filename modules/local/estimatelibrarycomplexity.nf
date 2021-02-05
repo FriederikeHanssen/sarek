@@ -1,0 +1,40 @@
+include { initOptions; saveFiles; getSoftwareName } from './functions'
+
+params.options = [:]
+def options    = initOptions(params.options)
+
+process ESTIMATE_LIBRARY_COMPLEXITY {
+    label 'process_high'
+
+    publishDir params.outdir, mode: params.publish_dir_mode,
+        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), publish_id:'') }
+
+    conda (params.enable_conda ? "bioconda::gatk4-spark=4.1.9.0" : null)
+    if (workflow.containerEngine == 'singularity' && !params.pull_docker_container) {
+        container "https://depot.galaxyproject.org/singularity/gatk4-spark:4.1.9.0--0"
+        
+    } else {
+        container "quay.io/biocontainers/gatk4-spark:4.1.9.0--0"
+    }
+
+    input:
+        tuple val(name), path(cram)
+        path(reference)
+        path(dict) //need to be present in the path
+        path(fai)  //need to be present in the path
+
+    output:
+        path('*.md.metrics'), emit: report
+
+    script:
+    def software = getSoftwareName(task.process)
+    def crams = cram.collect(){ x -> "-I ".concat(x.toString()) }.join(" ")
+    def output = options.suffix ? "${name}.${options.suffix}" : "${name}"
+    """
+    gatk EstimateLibraryComplexity \
+        ${crams} \
+        -O ${output}.md.metrics \
+        --REFERENCE_SEQUENCE ${reference} \
+        --TMP_DIR .
+    """
+}

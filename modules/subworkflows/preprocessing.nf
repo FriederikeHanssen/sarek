@@ -28,6 +28,8 @@ include { MD_ADAM_BAM} from '../local/md_adam_bam.nf' //addParams( )
 include { MD_SAMBAMBA} from '../local/md_sambamba.nf' //addParams( )
 include { MD_SAMBLASTER} from '../local/md_samblaster.nf' //addParams(  )
 
+include {ESTIMATE_LIBRARY_COMPLEXITY } from '../local/estimatelibrarycomplexity'
+
 include { CONVERT_TO_CRAM } from '../local/cram_conversion.nf'
 workflow PREPROCESSING {
 
@@ -54,22 +56,14 @@ workflow PREPROCESSING {
         }else {
             index = file(params.index)
         }
-        
-        //index.dump(tag: 'INDEX')
-        //fasta.dump()
+    
         mapped_grouped = Channel.empty()
         if(params.skip_merge && params.cram) {
             MAP_CRAM(split_reads, fasta, index)
-
-            //Does the channel have to be merged somehow?
-            //mapped = MAP.out
             mapped_grouped = MAP_CRAM.out.groupTuple()
         }
         else{
             MAP_BAM(split_reads, fasta, index)
-
-            //Does the channel have to be merged somehow?
-            //mapped = MAP.out
             mapped_grouped = MAP_BAM.out.groupTuple()    
         }
 
@@ -82,7 +76,7 @@ workflow PREPROCESSING {
             cram_out = mapped_grouped
 
             if (!params.skip_merge){
-                cram_out = MERGE_CRAM_SAMTOOLS(mapped_grouped, fasta) //right now this is not merging but only conversion to cram
+                cram_out = MERGE_CRAM_SAMTOOLS(mapped_grouped, fasta)
             }
             //MERGE_CRAM_SAMTOOLS(MAP.out, fasta)
             //TODO: insert: MERGE_CRAM_SAMBAMBA -> create mulled container for that
@@ -96,6 +90,8 @@ workflow PREPROCESSING {
                    duplicate_marked_cram = MD_ADAM(cram_out, fasta, dict, faidx)
                 }
             }
+
+            ESTIMATE_LIBRARY_COMPLEXITY(cram_out, fasta, dict, faidx)
         } else { //Merge, Convert to CRAM after MD (blue path)
             duplicate_marked = Channel.empty()
             if(params.skip_merge){
@@ -105,7 +101,6 @@ workflow PREPROCESSING {
                 duplicate_marked = MD_GATK_BAM(mapped_grouped, dict, faidx)
             }else{
                 merge_bam_out = params.merge_samtools ? MERGE_SAMTOOLS_BAM(mapped_grouped) : MERGE_SAMBAMBA_BAM(mapped_grouped)
-                //merge_bam_out.dump()
                 if (params.md_gatk){
                      dict = params.dict ? file(params.dict) : DICT(fasta)
                      faidx = params.faidx ? file(params.faidx) : SAMTOOLS_FAIDX(fasta)
@@ -114,19 +109,19 @@ workflow PREPROCESSING {
                 } else {
                     if (params.md_adam){
                           duplicate_marked = MD_ADAM_BAM(merge_bam_out)
-                    //}else{
-        //                 if(params.md_sambamba){
-        //                         duplicate_marked = MD_SAMBAMBA(merge_bam_out)
-        //                 }else { 
-        //                         duplicate_marked = MD_SAMBLASTER(merge_bam_out)
-        //                 }
+                    }else{
+                        if(params.md_sambamba){
+                                duplicate_marked = MD_SAMBAMBA(merge_bam_out)
+                        }else { 
+                                duplicate_marked = MD_SAMBLASTER(merge_bam_out)
+                        }
                         
                      }
                  }
                 
-        //         //Convert bam to cram, possible piping directly from MD for speed up purposes?
-        //         CONVERT_TO_CRAM(duplicate_marked, fasta)
-        //         duplicate_marked_cram = CONVERT_TO_CRAM
+                //Convert bam to cram, possible piping directly from MD for speed up purposes?
+                CONVERT_TO_CRAM(duplicate_marked, fasta)
+                duplicate_marked_cram = CONVERT_TO_CRAM
              }
             
         }
@@ -136,6 +131,5 @@ workflow PREPROCESSING {
 
 
     emit:
-        // duplicate_marked_cram
-        split_reads
+        duplicate_marked_cram
 }
