@@ -84,7 +84,7 @@ workflow PREPROCESSING {
             faidx = params.faidx ? file(params.faidx) : SAMTOOLS_FAIDX(fasta) 
 
             if(params.md_gatk){
-                 duplicate_marked_cram = MD_GATK(cram_out, fasta, dict, faidx)
+                 duplicate_marked_cram = MD_GATK(cram_out, fasta, dict, faidx).cram
             }else{
                 if(params.md_adam){
                    duplicate_marked_cram = MD_ADAM(cram_out, fasta, dict, faidx)

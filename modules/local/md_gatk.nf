@@ -23,7 +23,8 @@ process MD_GATK {
         path(fai)  //need to be present in the path
 
     output:
-        tuple val(name), path('*.md.cram')
+        tuple val(name), path('*.md.cram'), emit: cram
+        path('*.md.metrics'), emit: report
 
     script:
     //def software = getSoftwareName(task.process)
@@ -39,7 +40,7 @@ process MD_GATK {
         ${crams} \
         -O ${output}.md.cram \
         --reference ${reference} \
-        --allow-multiple-sort-orders-in-input \
+        -M ${output}.md.metrics \
         --tmp-dir . \
         -- \
         --conf spark.jars.ivy=/tmp/.ivy 

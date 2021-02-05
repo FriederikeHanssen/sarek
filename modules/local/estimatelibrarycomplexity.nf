@@ -35,6 +35,7 @@ process ESTIMATE_LIBRARY_COMPLEXITY {
         ${crams} \
         -O ${output}.md.metrics \
         --REFERENCE_SEQUENCE ${reference} \
+        --VALIDATION_STRINGENCY SILENT \
         --TMP_DIR .
     """
 }
