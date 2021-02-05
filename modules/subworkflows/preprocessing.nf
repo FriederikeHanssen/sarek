@@ -120,8 +120,8 @@ workflow PREPROCESSING {
                  }
                 
                 //Convert bam to cram, possible piping directly from MD for speed up purposes?
-                CONVERT_TO_CRAM(duplicate_marked, fasta)
-                duplicate_marked_cram = CONVERT_TO_CRAM
+                //CONVERT_TO_CRAM(duplicate_marked, fasta)
+                //duplicate_marked_cram = CONVERT_TO_CRAM
              }
             
         }
