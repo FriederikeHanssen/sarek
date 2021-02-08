@@ -40,7 +40,6 @@ process MD_GATK {
         ${crams} \
         -O ${output}.md.cram \
         --reference ${reference} \
-        -M ${output}.md.metrics \
         --tmp-dir . \
         -- \
         --conf spark.jars.ivy=/tmp/.ivy 
