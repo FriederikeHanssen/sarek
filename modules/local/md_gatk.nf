@@ -24,7 +24,7 @@ process MD_GATK {
 
     output:
         tuple val(name), path('*.md.cram'), emit: cram
-        path('*.md.metrics'), emit: report
+       // path('*.md.metrics'), emit: report
 
     script:
     //def software = getSoftwareName(task.process)
