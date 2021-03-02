@@ -67,14 +67,23 @@ def modules = params.modules.clone()
                        INCLUDE LOCAL PIPELINE SUBWORKFLOWS
 ================================================================================
 */
-include { PREPROCESSING } from './modules/subworkflows/preprocessing.nf' addParams( seqkit_options: modules['seqkit'],
-                                                                                    dict_options: modules['dict'], 
-                                                                                    fai_options: modules['samtools_faidx'], 
-                                                                                    bwamem2_options: modules['bwamem2'], 
-                                                                                    bwamem2_index_options: modules['bwamem2_index'], 
-                                                                                    md_gatk_options: modules['md_gatk'],
-                                                                                    md_adam_options: modules['md_adam'],
-                                                                                    md_sambamba_options: modules['md_sambamba'])
+// include { PREPROCESSING } from './modules/subworkflows/preprocessing.nf' addParams( seqkit_options: modules['seqkit'],
+//                                                                                     dict_options: modules['dict'], 
+//                                                                                     fai_options: modules['samtools_faidx'], 
+//                                                                                     bwamem2_options: modules['bwamem2'], 
+//                                                                                     bwamem2_index_options: modules['bwamem2_index'], 
+//                                                                                     md_gatk_options: modules['md_gatk'],
+//                                                                                     md_adam_options: modules['md_adam'],
+//                                                                                     md_sambamba_options: modules['md_sambamba'])
+
+include { BEST_WF } from './modules/subworkflows/most_promisingwf.nf' addParams ( seqkit_options: modules['seqkit'],
+                                                                                  dict_options: modules['dict'], 
+                                                                                  fai_options: modules['samtools_faidx'], 
+                                                                                  bwamem2_options: modules['bwamem2'], 
+                                                                                  bwamem2_index_options: modules['bwamem2_index'], 
+                                                                                  md_gatk_options: modules['md_gatk'],
+                                                                                  estimate_lib_complexity_options : modules['estimate_lib_complexity'],
+                                                                                  bqsr_options : ['bqsr'] )
 /*
 ================================================================================
                         INCLUDE nf-core PIPELINE MODULES
@@ -121,6 +130,7 @@ fasta.dump()
 
 params.faidx       = params.genome ? params.genomes[params.genome].fasta_fai               ?: false : false
 params.dict        = params.genome ? params.genomes[params.genome].dict                    ?: false : false
+params.intervals   = params.genome ? params.genomes[params.genome].intervals               ?: false : false
 
 
 workflow {
@@ -135,15 +145,17 @@ workflow {
     //     .splitCsv(header:true, sep:',')
     //     .map { check_samplesheet_paths(it) }
     //     .set { ch_raw_reads }
-    ch_input.dump(tag:'Input')
-    if (params.nf){
-        //OPTION 1: Use nextflow build in
-        ch_input.splitFastq( by: 100000 , file:true, pe: true, compress: true).set{split_read_pairs}
-    }else{
-        //OPTION 2 Use seqkit
-        PREPROCESSING(ch_input, fasta)
-    }
+    // ch_input.dump(tag:'Input')
+    // if (params.nf){
+    //     //OPTION 1: Use nextflow build in
+    //     ch_input.splitFastq( by: 100000 , file:true, pe: true, compress: true).set{split_read_pairs}
+    // }else{
+    //     //OPTION 2 Use seqkit
+    //     PREPROCESSING(ch_input, fasta)
+    // }
 
+
+    BEST_WF(ch_input, fasta)
 
 
 
