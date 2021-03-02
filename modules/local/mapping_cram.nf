@@ -23,7 +23,7 @@ process MAP_CRAM{
         path (reference)
 
     output:
-        tuple val(name), path ("*.bam")
+        tuple val(name), path ("*.cram")
 
 
     script:
@@ -37,11 +37,10 @@ process MAP_CRAM{
     def readGroup = "@RG\\tID:1\\t${CN}PU:1\\tSM:${name}\\tLB:${name}\\tPL:ILLUMINA"
 
     """
-    bwa-mem2 mem ${options.args} -R \"${readGroup}\" -t ${task.cpus} ${fasta} ${reads} | samtools sort -n -@ ${task.cpus} -m 64G -o ${name}.${part}.bam - 
+    bwa-mem2 mem ${options.args} -R \"${readGroup}\" -t ${task.cpus} ${fasta} ${reads} | samtools sort -n -@ ${task.cpus} -m 64G - | samtools view -T ${fasta} -C -o ${name}.${part}.cram -
     echo \$(bwa-mem2 version 2>&1) > bwa-mem2.version.txt
     """
     //samtools may need different memory setting -m 2G why not use task.memory: .GB ending throws error, only K/M/G are recognized. harcoding taks.memory = 84G also did not work
     // '  samtools sort: couldn't allocate memory for bam_mem', knocking of 20GB appears to (not) work. Setting it to 64G was a completely arbitrary
     // TODO: Do I need -T here? Where are tmo files written to?
-    //| samtools view -T ${fasta} -C -o ${name}.${part}.cram -
 }

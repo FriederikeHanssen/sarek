@@ -4,17 +4,17 @@ include { initOptions; saveFiles; getSoftwareName } from './functions'
 params.options = [:]
 def options    = initOptions(params.options)
 
-process MAP_BAM{
+process MAP_DRAGEN{
     label 'process_high'
     publishDir "${params.outdir}",
         mode: params.publish_dir_mode,
         saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:'mapping', publish_id:'') }
     
-    conda (params.enable_conda ? "bioconda::bwa-mem2=2.1--he513fc3_0 bioconda::samtools=1.11--h6270b1f_0" : null)
+    conda (params.enable_conda ? "bioconda::gatk4==4.2.0.0" : null)
     if (workflow.containerEngine == 'singularity' && !params.pull_docker_container) {
-        container "https://depot.galaxyproject.org/singularity/mulled-v2-e5d375990341c5aef3c9aff74f96f66f65375ef6:e6f0d20c9d78572ddbbf00d8767ee6ff865edd4e-0" 
+        container "https://depot.galaxyproject.org/singularity/gatk4:4.2.0.0--0" 
     } else {
-        container "quay.io/biocontainers/mulled-v2-e5d375990341c5aef3c9aff74f96f66f65375ef6:e6f0d20c9d78572ddbbf00d8767ee6ff865edd4e-0"
+        container "quay.io/biocontainers/gatk4:4.2.0.0--0"
     }
     //TODO: double check the mulled container now is correct
     input:
@@ -23,7 +23,7 @@ process MAP_BAM{
         path (reference)
 
     output:
-        tuple val(name), path ("*.bam")
+        tuple val(name), path ("*.cram")
 
 
     script:
@@ -37,9 +37,9 @@ process MAP_BAM{
     def readGroup = "@RG\\tID:1\\t${CN}PU:1\\tSM:${name}\\tLB:${name}\\tPL:ILLUMINA"
 
     """
-    bwa-mem2 mem ${options.args} -R \"${readGroup}\" -t ${task.cpus} ${fasta} ${reads} | samtools sort -n -@ ${task.cpus} -m 64G -o ${name}.${part}.bam -
+    bwa-mem2 mem ${options.args} -R \"${readGroup}\" -t ${task.cpus} ${fasta} ${reads} | samtools sort -n -@ ${task.cpus} -m 64G - | samtools view -T ${fasta} -C -o ${name}.${part}.cram -
     echo \$(bwa-mem2 version 2>&1) > bwa-mem2.version.txt
-    """ 
+    """
     //samtools may need different memory setting -m 2G why not use task.memory: .GB ending throws error, only K/M/G are recognized. harcoding taks.memory = 84G also did not work
     // '  samtools sort: couldn't allocate memory for bam_mem', knocking of 20GB appears to (not) work. Setting it to 64G was a completely arbitrary
     // TODO: Do I need -T here? Where are tmo files written to?

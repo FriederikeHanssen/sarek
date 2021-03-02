@@ -3,8 +3,8 @@ include { initOptions; saveFiles; getSoftwareName } from './functions'
 params.options = [:]
 def options    = initOptions(params.options)
 
-process ESTIMATE_LIBRARY_COMPLEXITY {
-    label 'process_high'
+process ApplyBQSR {
+    label 'process_medium'
 
     publishDir params.outdir, mode: params.publish_dir_mode,
         saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), publish_id:'') }
@@ -17,24 +17,25 @@ process ESTIMATE_LIBRARY_COMPLEXITY {
     }
 
     input:
-        tuple val(name), path(cram)
+        tuple val(name), path(cram), path(recalibrationReport), path(intervalBed
         path(reference)
-        path(dict) //need to be present in the path
-        path(fai)  //need to be present in the path
+        path(dict)
+        path(fai)
 
     output:
-        path('*.md.metrics'), emit: report
+        tuple val(name), path('*.cram.recal'), emit: cram
 
     script:
-    def software = getSoftwareName(task.process)
-    def crams = cram.collect(){ x -> "-I ".concat(x.toString()) }.join(" ")
     def output = options.suffix ? "${name}.${options.suffix}" : "${name}"
+    intervalsOptions = params.no_intervals ? "" : "-L ${intervalBed}"
+
     """
-    gatk EstimateLibraryComplexity \
-        ${crams} \
-        -O ${output}.md.metrics \
-        --REFERENCE_SEQUENCE ${reference} \
-        --VALIDATION_STRINGENCY SILENT \
-        --TMP_DIR .
+    gatk HaplotypeCaller \
+       -R reference.fasta \
+       -I ${cram} \
+       --bqsr-recal-file recalibration.table \
+       -O ${cram}.recal
+       ${intervalsOptions} \
+        --bqsr-recal-file ${recalibrationReport}
     """
 }

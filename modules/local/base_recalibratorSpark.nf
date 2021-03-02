@@ -3,8 +3,8 @@ include { initOptions; saveFiles; getSoftwareName } from './functions'
 params.options = [:]
 def options    = initOptions(params.options)
 
-process ESTIMATE_LIBRARY_COMPLEXITY {
-    label 'process_high'
+process BASERECALIBRATIONSPARK {
+    label 'process_medium'
 
     publishDir params.outdir, mode: params.publish_dir_mode,
         saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), publish_id:'') }
@@ -17,24 +17,31 @@ process ESTIMATE_LIBRARY_COMPLEXITY {
     }
 
     input:
-        tuple val(name), path(cram)
+        tuple val(name), path(cram), path(recalibrationReport), path(intervalBed
         path(reference)
-        path(dict) //need to be present in the path
-        path(fai)  //need to be present in the path
+        path(dict)
+        path(fai)
+        path(dbsnp)
+        path(dbsnpIndex)
 
     output:
-        path('*.md.metrics'), emit: report
+        tuple val(name), path('*.table'), emit: table
 
     script:
-    def software = getSoftwareName(task.process)
-    def crams = cram.collect(){ x -> "-I ".concat(x.toString()) }.join(" ")
     def output = options.suffix ? "${name}.${options.suffix}" : "${name}"
+
     """
-    gatk EstimateLibraryComplexity \
-        ${crams} \
-        -O ${output}.md.metrics \
-        --REFERENCE_SEQUENCE ${reference} \
-        --VALIDATION_STRINGENCY SILENT \
-        --TMP_DIR .
+    export SPARK_LOCAL_IP=127.0.0.1
+    export SPARK_PUBLIC_DNS=127.0.0.1
+    
+    gatk  BaseRecalibratorSpark \
+        -I ${cram} \
+        -O ${prefix}${idSample}.recal.table \
+        --tmp-dir . \
+        -R ${fasta} \
+        ${intervalsOptions} \
+        ${dbsnpOptions} \
+        ${knownOptions} \
+        --verbosity INFO
     """
 }
