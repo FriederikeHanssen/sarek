@@ -3,7 +3,7 @@ include { initOptions; saveFiles; getSoftwareName } from './functions'
 params.options = [:]
 def options    = initOptions(params.options)
 
-process SAMTOOLS_FAIDX {
+process INDEX_CRAM {
     label 'process_high'
 
     publishDir params.outdir, mode: params.publish_dir_mode,
@@ -17,17 +17,15 @@ process SAMTOOLS_FAIDX {
     }
 
     input:
-        path(fasta)
+        tuple val(name), path(cram)
 
     output:
-       path("*.fai")
+        tuple val(name), path("*.crai")
 
     script:
+    //def name_2 = options.suffix ? "${name}.${options.suffix}" : "${name}"
     """
-    samtools faidx ${fasta}
+    samtools index ${cram}
     """
-    //    samtools merge --threads ${task.cpus} - ${bam} | samtools view -T ${fasta} -C -o ${name_2}.cram -
-        //--> add back in after cram array test
-    //TODO this could also be done with sambamba, which is apaprently much faster, all this tool replacement would require quiet a bit of benchmarking etc.
-    // | samtools view -T ${fasta} -C -o ${name}.${part}.cram -
+
 }

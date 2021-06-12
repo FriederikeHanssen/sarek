@@ -3,7 +3,7 @@ include { initOptions; saveFiles; getSoftwareName } from './functions'
 params.options = [:]
 def options    = initOptions(params.options)
 
-process ESTIMATE_LIBRARY_COMPLEXITY {
+process ESTIMATE_LIBRARY_COMPLEXITY_CRAM {
     label 'process_high'
 
     publishDir params.outdir, mode: params.publish_dir_mode,
@@ -11,7 +11,7 @@ process ESTIMATE_LIBRARY_COMPLEXITY {
 
     conda (params.enable_conda ? "bioconda::gatk4==4.2.0.0" : null)
     if (workflow.containerEngine == 'singularity' && !params.pull_docker_container) {
-        container "https://depot.galaxyproject.org/singularity/gatk4:4.2.0.0--0" 
+        container "https://depot.galaxyproject.org/singularity/gatk4:4.2.0.0--0"
     } else {
         container "quay.io/biocontainers/gatk4:4.2.0.0--0"
     }

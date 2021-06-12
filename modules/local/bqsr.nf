@@ -17,7 +17,7 @@ process BASERECALIBRATION {
     }
 
     input:
-        tuple val(name), path(cram), path(recalibrationReport), path(intervalBed)
+        tuple val(name), path(cram), path(crai), path(intervalBed)
         path(reference)
         path(dict)
         path(fastaFai)
@@ -37,9 +37,9 @@ process BASERECALIBRATION {
     """
     gatk  BaseRecalibrator \
         -I ${cram} \
-        -O ${prefix}${idSample}.recal.table \
+        -O ${prefix}${output}.recal.table \
         --tmp-dir . \
-        -R ${fasta} \
+        -R ${reference} \
         ${intervalsOptions} \
         --known-sites ${dbsnp} \
         ${knownOptions} \

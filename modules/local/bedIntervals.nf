@@ -4,19 +4,32 @@ params.options = [:]
 def options    = initOptions(params.options)
 
 process CREATEINTERVALBEDS {
-    tag "${intervals}"
+    label 'process_low'
 
+    publishDir params.outdir, mode: params.publish_dir_mode,
+        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), publish_id:'') }
+    
+    conda (params.enable_conda ? "anaconda::gawk=5.1.0" : null)
+    if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
+        container "https://depot.galaxyproject.org/singularity/gawk:5.1.0"
+    } else {
+        container "quay.io/biocontainers/gawk:5.1.0"
+    }
+    
     input:
         path(intervals)
+
     output:
-        path('*.bed') mode flatten
+       path("*.bed")
 
     script:
-    // If the interval file is BED format, the fifth column is interpreted to
+        def extension = intervals.getExtension()
+    
+    //If the interval file is BED format, the fifth column is interpreted to
     // contain runtime estimates, which is then used to combine short-running jobs
-    if (hasExtension(intervals, "bed")) //TODO this willbe executed
-        """
-        awk -vFS="\t" '{
+    if (extension == "bed" ) //TODO this will be executed
+         """
+         awk -vFS="\t" '{
           t = \$5  # runtime estimate
           if (t == "") {
             # no runtime estimate in this row, assume default value

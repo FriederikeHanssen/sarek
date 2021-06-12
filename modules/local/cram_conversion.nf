@@ -9,11 +9,11 @@ process CONVERT_TO_CRAM {
     publishDir params.outdir, mode: params.publish_dir_mode,
         saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), publish_id:'') }
 
-    conda (params.enable_conda ? "bioconda::samtools=1.11--h6270b1f_0" : null)
+    conda (params.enable_conda ? "bioconda::samtools=1.12" : null)
     if (workflow.containerEngine == 'singularity' && !params.pull_docker_container) {
-        container "https://depot.galaxyproject.org/singularity/samtools:1.11--h6270b1f_0"
+        container "https://depot.galaxyproject.org/singularity/samtools:1.12--hd5e65b6_0 "
     } else {
-        container "quay.io/biocontainers/samtools:1.11--h6270b1f_0"
+        container "quay.io/biocontainers/samtools:1.12--hd5e65b6_0 "
     }
 
     input:

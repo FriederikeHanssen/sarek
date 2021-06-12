@@ -4,7 +4,7 @@ params.options = [:]
 def options    = initOptions(params.options)
 
 process BQSRSPARKPIPELINE_SPARK {
-    label 'process_medium'
+    label 'process_high'
 
     publishDir params.outdir, mode: params.publish_dir_mode,
         saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), publish_id:'') }
@@ -17,30 +17,34 @@ process BQSRSPARKPIPELINE_SPARK {
     }
 
     input:
-        tuple val(name), path(cram), path(recalibrationReport), path(intervalBed
+        tuple val(name), path(cram), path(crai)
+        path(intervals)
         path(reference)
-        path(dict)
         path(fai)
+        path(dict)
         path(dbsnp)
         path(dbsnpIndex)
+        path(knownIndels)
+        path(knownIndelsIndex)
 
     output:
-        tuple val(name), path('*.table'), emit: table
+        tuple val(name), path('*.recal.cram'), emit: table
 
     script:
     def output = options.suffix ? "${name}.${options.suffix}" : "${name}"
-
+    knownOptions = params.known_indels ? knownIndels.collect{"--known-sites ${it}"}.join(' ') : ""
+    intervalsOptions = params.no_intervals ? "" : intervals.collect{ x -> "-L ".concat(x.toString()) }.join(" ")
     """
     export SPARK_LOCAL_IP=127.0.0.1
     export SPARK_PUBLIC_DNS=127.0.0.1
     
     gatk  BQSRPipelineSpark \
         -I ${cram} \
-        -O ${prefix}${idSample}.recal.table \
+        -O ${name}.recal.cram \
         --tmp-dir . \
-        -R ${fasta} \
+        -R ${reference} \
         ${intervalsOptions} \
-        ${dbsnpOptions} \
+        --known-sites ${dbsnp} \
         ${knownOptions} \
         --verbosity INFO
     """

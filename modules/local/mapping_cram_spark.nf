@@ -4,11 +4,11 @@ include { initOptions; saveFiles; getSoftwareName } from './functions'
 params.options = [:]
 def options    = initOptions(params.options)
 
-process MAP_BAM{
+process MAP_CRAM_SPARK{
     label 'process_high'
     publishDir "${params.outdir}",
         mode: params.publish_dir_mode,
-        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:'mapping_bam', publish_id:'') }
+        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:'mapping_cram_spark', publish_id:'') }
 
     conda (params.enable_conda ? "bioconda::bwa-mem2=2.2.1 bioconda::samtools=1.12" : null)
     if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
@@ -23,7 +23,7 @@ process MAP_BAM{
         path (reference)
 
     output:
-        tuple val(name), path ("*.bam")
+        tuple val(name), path ("*.cram")
 
 
     script:
@@ -31,13 +31,12 @@ process MAP_BAM{
     //extra = meta.status == 1 ? "-B 3" : "" when tumor than allow for a smaller mismatch penalty...why? will leave by default for now
     def name = reads.get(0).simpleName //TODO: Set name better
     def part = params.parts > 1 ? reads.get(0).name.findAll(/part_([0-9]+)?/).last().concat('.') : ""
-
     //TODO hard coded, needs fix eventually
     def CN = ""
     def readGroup = "@RG\\tID:1\\t${CN}PU:1\\tSM:${name}\\tLB:${name}\\tPL:ILLUMINA"
 
     """
-    bwa-mem2 mem ${options.args} -R \"${readGroup}\" -t ${task.cpus} ${fasta} ${reads} | samtools sort -@ ${task.cpus} -m 6G -o ${name}.${part}bam -
+    bwa-mem2 mem ${options.args} -R \"${readGroup}\" -t ${task.cpus} ${fasta} ${reads} | samtools sort -n -@ ${task.cpus} -m 6G - | samtools view -T ${fasta} -C -o ${name}.${part}cram -
     echo \$(bwa-mem2 version 2>&1) > bwa-mem2.version.txt
     """
     //samtools may need different memory setting -m 2G why not use task.memory: .GB ending throws error, only K/M/G are recognized. harcoding taks.memory = 84G also did not work

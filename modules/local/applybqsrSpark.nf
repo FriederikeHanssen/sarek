@@ -3,7 +3,7 @@ include { initOptions; saveFiles; getSoftwareName } from './functions'
 params.options = [:]
 def options    = initOptions(params.options)
 
-process ApplyBQSR {
+process APPLYBQSR_SPARK {
     label 'process_medium'
 
     publishDir params.outdir, mode: params.publish_dir_mode,
@@ -17,28 +17,28 @@ process ApplyBQSR {
     }
 
     input:
-        tuple val(name), path(cram), path(recalibrationReport), path(intervalBed
+        tuple val(name), path(cram), path(crai), path(intervalBed), path(recalibrationReport)
         path(reference)
-        path(dict)
         path(fai)
+        path(dict)
 
     output:
-        tuple val(name), path('*.cram.recal'), emit: cram
+        tuple val(name), path('*.recal.cram'), emit: cram
 
     script:
     def output = options.suffix ? "${name}.${options.suffix}" : "${name}"
     intervalsOptions = params.no_intervals ? "" : "-L ${intervalBed}"
+    prefix = params.no_intervals ? "" : "${intervalBed.baseName}_"
 
     """
     export SPARK_LOCAL_IP=127.0.0.1
     export SPARK_PUBLIC_DNS=127.0.0.1
-
+    
     gatk ApplyBQSRSpark \
-       -R reference.fasta \
+       -R ${reference} \
        -I ${cram} \
-       --bqsr-recal-file recalibration.table \
-       -O ${cram}.recal \
-       ${intervalsOptions} \
-        --bqsr-recal-file ${recalibrationReport}
+       --bqsr-recal-file ${recalibrationReport} \
+       -O ${prefix}.recal.cram \
+       ${intervalsOptions} 
     """
 }

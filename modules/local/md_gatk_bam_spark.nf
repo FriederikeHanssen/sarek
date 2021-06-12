@@ -3,7 +3,7 @@ include { initOptions; saveFiles; getSoftwareName } from './functions'
 params.options = [:]
 def options    = initOptions(params.options)
 
-process MD_GATK {
+process MD_GATK_SPARK_BAM {
     label 'process_high'
 
     publishDir params.outdir, mode: params.publish_dir_mode,
@@ -11,43 +11,41 @@ process MD_GATK {
 
     conda (params.enable_conda ? "bioconda::gatk4==4.2.0.0" : null)
     if (workflow.containerEngine == 'singularity' && !params.pull_docker_container) {
-        container "https://depot.galaxyproject.org/singularity/gatk4:4.2.0.0--0" 
+        container "https://depot.galaxyproject.org/singularity/gatk4:4.2.0.0--0"
     } else {
         container "quay.io/biocontainers/gatk4:4.2.0.0--0"
     }
 
     input:
-        tuple val(name), path(cram)
-        path(reference)
+        tuple val(name), path(bam)
         path(dict) //need to be present in the path
         path(fai)  //need to be present in the path
 
     output:
-        tuple val(name), path('*.md.cram'), emit: cram
+        tuple val(name), path('*.md.bam'), emit: cram
        // path('*.md.metrics'), emit: report
 
     script:
     //def software = getSoftwareName(task.process)
     //markdup_java_options = "\"-Xms" +  (task.memory.toGiga() / 2   ).trunc() + "g -Xmx" + (task.memory.toGiga() - 1) + "g\""
-    def crams = cram.collect(){ x -> "-I ".concat(x.toString()) }.join(" ")
+    def bams = bam.collect(){ x -> "-I ".concat(x.toString()) }.join(" ")
     def output = options.suffix ? "${name}.${options.suffix}" : "${name}"
+    //TODO: Use intervals here?
     """
     export SPARK_LOCAL_IP=127.0.0.1
     export SPARK_PUBLIC_DNS=127.0.0.1
-
     gatk  \
         MarkDuplicatesSpark \
-        ${crams} \
-        -O ${output}.md.cram \
-        --reference ${reference} \
+        ${bams} \
+        -O ${output}.md.bam \
         --tmp-dir . \
         -- \
-        --conf spark.jars.ivy=/tmp/.ivy 
+        --conf spark.jars.ivy=/tmp/.ivy
     """
 }
 //Possibly not use metrics file, could be a bottleneck: https://sites.google.com/a/broadinstitute.org/legacy-gatk-forum-discussions/2019-02-11-2018-08-12/23441-MarkDuplicateSpark-is-slower-than-normal-MarkDuplicates
-    //--java-options ${markdup_java_options} 
-    //--spark-master local[${task.cpus}]  
+    //--java-options ${markdup_java_options}
+    //--spark-master local[${task.cpus}]
     //Prob not needed as I am using crams now      --create-output-bam-index true \
 
     //   export GATK_LOCAL_JAR=/root/gatk.jar

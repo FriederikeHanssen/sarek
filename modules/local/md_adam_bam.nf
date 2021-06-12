@@ -9,12 +9,12 @@ process MD_ADAM_BAM{
     publishDir "${params.outdir}",
         mode: params.publish_dir_mode,
         saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:'mark_duplicates', publish_id:'') }
-    
-    conda (params.enable_conda ? "bioconda::adam=0.33.0--0" : null)
+
+    conda (params.enable_conda ? "bioconda::adam=0.35.0--0" : null)
     if (workflow.containerEngine == 'singularity' && !params.pull_docker_container) {
-        container "https://depot.galaxyproject.org/singularity/adam:0.33.0--0"
+        container "https://depot.galaxyproject.org/singularity/adam:0.35.0--hdfd78af_0 "
     } else {
-        container "quay.io/biocontainers/adam:0.33.0--0"
+        container "quay.io/biocontainers/adam:0.35.0--hdfd78af_0 "
     }
 
     input:
@@ -26,15 +26,11 @@ process MD_ADAM_BAM{
 
     script:
     def software = getSoftwareName(task.process)
-   
+
     """
-    export SPARK_LOCAL_IP=127.0.0.1
-    export SPARK_PUBLIC_DNS=127.0.0.1
     adam-submit \
        --master local[${task.cpus}] \
        --driver-memory ${task.memory.toGiga()}g \
-       --conf spark.local.dir=. \
-       --conf spark.jars.ivy=/tmp/.ivy \
        -- \
        transformAlignments \
        -mark_duplicate_reads \
@@ -43,13 +39,13 @@ process MD_ADAM_BAM{
        ${bam}\
        ${bam.simpleName}.adam.md.bam
     """
-    //--master <mysparkmaster> 
+    //--master <mysparkmaster>
     //\ --deploy-mode cluster \ --d river-memory 20g \ --executor-memory 20g \ --conf spark.driver.cores=16 \ --conf spark.executor.cores=16 \ --conf spark.yarn.executor.memoryOverhead=2048 \ --conf spark.executor.instances=3 \
     //  touch ${idSample}.bam.metrics
     //  samtools index ${idSample}.md.bam
 
     //       --driver-memory ${task.memory.toGiga()}g \
 
-   
+
 
 }
