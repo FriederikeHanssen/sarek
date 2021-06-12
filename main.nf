@@ -68,22 +68,27 @@ def modules = params.modules.clone()
 ================================================================================
 */
 // include { PREPROCESSING } from './modules/subworkflows/preprocessing.nf' addParams( seqkit_options: modules['seqkit'],
-//                                                                                     dict_options: modules['dict'], 
-//                                                                                     fai_options: modules['samtools_faidx'], 
-//                                                                                     bwamem2_options: modules['bwamem2'], 
-//                                                                                     bwamem2_index_options: modules['bwamem2_index'], 
+//                                                                                     dict_options: modules['dict'],
+//                                                                                     fai_options: modules['samtools_faidx'],
+//                                                                                     bwamem2_options: modules['bwamem2'],
+//                                                                                     bwamem2_index_options: modules['bwamem2_index'],
 //                                                                                     md_gatk_options: modules['md_gatk'],
 //                                                                                     md_adam_options: modules['md_adam'],
 //                                                                                     md_sambamba_options: modules['md_sambamba'])
 
-include { BEST_WF } from './modules/subworkflows/most_promisingwf.nf' addParams ( seqkit_options: modules['seqkit'],
-                                                                                  dict_options: modules['dict'], 
-                                                                                  fai_options: modules['samtools_faidx'], 
-                                                                                  bwamem2_options: modules['bwamem2'], 
-                                                                                  bwamem2_index_options: modules['bwamem2_index'], 
-                                                                                  md_gatk_options: modules['md_gatk'],
-                                                                                  estimate_lib_complexity_options : modules['estimate_lib_complexity'],
-                                                                                  bqsr_options : ['bqsr'] )
+// include { BEST_WF } from './modules/subworkflows/most_promisingwf.nf' addParams ( seqkit_options: modules['seqkit'],
+//                                                                                   dict_options: modules['dict'],
+//                                                                                   fai_options: modules['samtools_faidx'],
+//                                                                                   bwamem2_options: modules['bwamem2'],
+//                                                                                   bwamem2_index_options: modules['bwamem2_index'],
+//                                                                                   md_gatk_options: modules['md_gatk'],
+//                                                                                   estimate_lib_complexity_options : modules['estimate_lib_complexity'],
+//                                                                                   bqsr_options : ['bqsr'],
+//                                                                                   intervals_options : ['intervals'])
+
+include { MAP_BENCHMARK } from './modules/subworkflows/split_map_benchmark.nf' addParams ( seqkit_options: modules['seqkit'],
+                                                                                        bwamem2_options: modules['bwamem2'],
+                                                                                   bwamem2_index_options: modules['bwamem2_index'])
 /*
 ================================================================================
                         INCLUDE nf-core PIPELINE MODULES
@@ -104,16 +109,16 @@ include { BEST_WF } from './modules/subworkflows/most_promisingwf.nf' addParams 
 ================================================================================
 */
 
-if (params.input && (has_extension(params.input, "tsv"))) { 
+if (params.input && (has_extension(params.input, "tsv"))) {
     ch_input = extract_fastq(params.input)
 } else {
-    if (params.input){ 
+    if (params.input){
         Channel.from(params.input)
            .map { row -> [ row[0], file(row[1][0], checkIfExists: true), file(row[1][1], checkIfExists: true) ] }
            .ifEmpty { exit 1, "params.input was empty - no input files supplied" }
            .set { ch_input }
     }  else{
-        exit 1, "Input  not specified!" 
+        exit 1, "Input  not specified!"
     }
 }
 
@@ -131,7 +136,19 @@ fasta.dump()
 params.faidx       = params.genome ? params.genomes[params.genome].fasta_fai               ?: false : false
 params.dict        = params.genome ? params.genomes[params.genome].dict                    ?: false : false
 params.intervals   = params.genome ? params.genomes[params.genome].intervals               ?: false : false
+intervals          = params.intervals  ? file(params.intervals)             : file("${params.outdir}/no_file")
 
+params.dbsnp   = params.genome ? params.genomes[params.genome].dbsnp               ?: false : false
+dbsnp          = params.dbsnp  ? file(params.dbsnp)             : file("${params.outdir}/no_file")
+
+params.dbsnp_index   = params.genome ? params.genomes[params.genome].dbsnp_index               ?: false : false
+dbsnpIndex          = params.dbsnp_index  ? file(params.dbsnp_index)             : file("${params.outdir}/no_file")
+
+params.known_indels   = params.genome ? params.genomes[params.genome].known_indels               ?: false : false
+knownIndels          = params.known_indels  ? file(params.known_indels)             : file("${params.outdir}/no_file")
+
+params.known_indels_index   = params.genome ? params.genomes[params.genome].known_indels_index               ?: false : false
+knownIndelsIndex          = params.known_indels_index  ? file(params.known_indels_index)             : file("${params.outdir}/no_file")
 
 workflow {
 
@@ -155,11 +172,11 @@ workflow {
     // }
 
 
-    BEST_WF(ch_input, fasta)
+    //BEST_WF(ch_input, fasta, intervals, dbsnp, dbsnpIndex, knownIndels, knownIndelsIndex)
+
+    MAP_BENCHMARK(ch_input, fasta)
 
 
-
-    
     /*
     ================================================================================
                                 BASERECALIBRATION
@@ -171,7 +188,7 @@ workflow {
                                 GERMLINE VARIANT CALLING
     ================================================================================
     */
- 
+
     /*
     ================================================================================
                                 SOMATIC VARIANT CALLING
@@ -184,7 +201,7 @@ workflow {
     ================================================================================
     */
 
-    //these steps we should probably completely omit (for time comparison at least), this is what big sarek is for 
+    //these steps we should probably completely omit (for time comparison at least), this is what big sarek is for
 
     /*
     ================================================================================
