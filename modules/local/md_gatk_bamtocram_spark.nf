@@ -3,7 +3,7 @@ include { initOptions; saveFiles; getSoftwareName } from './functions'
 params.options = [:]
 def options    = initOptions(params.options)
 
-process MD_GATK_SPARK_BAM {
+process MD_GATK_SPARK_BAM_TO_CRAM {
     label 'process_high'
 
     publishDir params.outdir, mode: params.publish_dir_mode,
@@ -18,11 +18,12 @@ process MD_GATK_SPARK_BAM {
 
     input:
         tuple val(name), path(bam)
+        path(reference)
         path(dict) //need to be present in the path
         path(fai)  //need to be present in the path
 
     output:
-        tuple val(name), path('*.md.bam'), path('*.bai'), emit: cram
+        tuple val(name), path('*.md.cram'), emit: cram
        // path('*.md.metrics'), emit: report
 
     script:
@@ -34,11 +35,13 @@ process MD_GATK_SPARK_BAM {
     """
     export SPARK_LOCAL_IP=127.0.0.1
     export SPARK_PUBLIC_DNS=127.0.0.1
+
+
     gatk  \
         MarkDuplicatesSpark \
         ${bams} \
-        -O ${output}.md.bam \
-        --create-output-bam-index \
+        -O ${output}.md.cram \
+        --reference ${reference} \
         --tmp-dir . \
         -- \
         --conf spark.jars.ivy=/tmp/.ivy

@@ -3,7 +3,7 @@ include { initOptions; saveFiles; getSoftwareName } from './functions'
 params.options = [:]
 def options    = initOptions(params.options)
 
-process APPLYBQSR {
+process BASERECALIBRATION_BAM {
     label 'process_medium'
 
     publishDir params.outdir, mode: params.publish_dir_mode,
@@ -11,30 +11,38 @@ process APPLYBQSR {
 
     conda (params.enable_conda ? "bioconda::gatk4==4.2.0.0" : null)
     if (workflow.containerEngine == 'singularity' && !params.pull_docker_container) {
-        container "https://depot.galaxyproject.org/singularity/gatk4:4.2.0.0--0" 
+        container "https://depot.galaxyproject.org/singularity/gatk4:4.2.0.0--0"
     } else {
         container "quay.io/biocontainers/gatk4:4.2.0.0--0"
     }
 
     input:
-        tuple val(name), path(cram), path(crai), path(intervalBed), path(recalibrationReport)
+        tuple val(name), path(bam), path(bai), path(intervalBed)
         path(reference)
-        path(fai)
         path(dict)
+        path(fastaFai)
+        path(dbsnp)
+        path(dbsnpIndex)
+        path(knownIndels)
+        path(knownIndelsIndex)
 
     output:
-        tuple val(name), path('*.recal.cram'), emit: cram
+        tuple val(name), path('*.table'), emit: table
 
     script:
     def output = options.suffix ? "${name}.${options.suffix}" : "${name}"
-    intervalsOptions = params.no_intervals ? "" : "-L ${intervalBed}"
+    knownOptions = params.known_indels ? knownIndels.collect{"--known-sites ${it}"}.join(' ') : ""
     prefix = params.no_intervals ? "" : "${intervalBed.baseName}_"
+    intervalsOptions = params.no_intervals ? "" : "-L ${intervalBed}"
     """
-    gatk ApplyBQSR \
-       -R ${reference} \
-       -I ${cram} \
-       --bqsr-recal-file ${recalibrationReport} \
-       -O ${prefix}.recal.cram \
-       ${intervalsOptions} 
+    gatk  BaseRecalibrator \
+        -I ${bam} \
+        -O ${prefix}${output}.recal.table \
+        --tmp-dir . \
+        -R ${reference} \
+        ${intervalsOptions} \
+        --known-sites ${dbsnp} \
+        ${knownOptions} \
+        --verbosity INFO
     """
 }

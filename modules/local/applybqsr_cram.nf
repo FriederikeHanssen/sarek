@@ -3,7 +3,7 @@ include { initOptions; saveFiles; getSoftwareName } from './functions'
 params.options = [:]
 def options    = initOptions(params.options)
 
-process GATHER_BQSR_REPORTS {
+process APPLYBQSR_CRAM {
     label 'process_medium'
 
     publishDir params.outdir, mode: params.publish_dir_mode,
@@ -17,16 +17,24 @@ process GATHER_BQSR_REPORTS {
     }
 
     input:
-        tuple val(name), path(recal)
+        tuple val(name), path(cram), path(crai), path(intervalBed), path(recalibrationReport)
+        path(reference)
+        path(fai)
+        path(dict)
 
     output:
-        tuple val(name), path('*.table')
+        tuple val(name), path('*.recal.cram')
+
     script:
-    input = recal.collect{"-I ${it}"}.join(' ')
+    def output = options.suffix ? "${name}.${options.suffix}" : "${name}"
+    intervalsOptions = params.no_intervals ? "" : "-L ${intervalBed}"
+    prefix = params.no_intervals ? "" : "${intervalBed.baseName}_"
     """
-    gatk --java-options -Xmx${task.memory.toGiga()}g \
-        GatherBQSRReports \
-        ${input} \
-        -O ${name}.recal.table \
+    gatk ApplyBQSR \
+       -R ${reference} \
+       -I ${cram} \
+       --bqsr-recal-file ${recalibrationReport} \
+       -O ${prefix}.recal.cram \
+       ${intervalsOptions}
     """
 }

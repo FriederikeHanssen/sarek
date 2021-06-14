@@ -22,8 +22,8 @@ process MD_GATK_BAM {
         path(fai)  //need to be present in the path
 
     output:
-        tuple val(name), path('*.md.bam'), emit: bam
-        path('*.md.metrics'), emit: report
+        tuple val(name), path('*.md.bam'), path('*.bai')
+
 
     script:
     def software = getSoftwareName(task.process)
@@ -40,6 +40,7 @@ process MD_GATK_BAM {
         -O ${output}.md.bam \
         -M ${output}.md.metrics \
         --TMP_DIR . \
+        --CREATE_INDEX \
         --ASSUME_SORT_ORDER coordinate
     """
    //  --MAX_RECORDS_IN_RAM 50000 \ is this benchmarked somewhere? -> the number here seems to be 10x lower than the default number, whhy is that? try at least once with the default options --> seems to be a copy&paste error

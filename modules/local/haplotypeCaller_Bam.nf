@@ -3,7 +3,7 @@ include { initOptions; saveFiles; getSoftwareName } from './functions'
 params.options = [:]
 def options    = initOptions(params.options)
 
-process GATHER_BQSR_REPORTS {
+process HAPLOTYPECALLER_BAM {
     label 'process_medium'
 
     publishDir params.outdir, mode: params.publish_dir_mode,
@@ -17,16 +17,28 @@ process GATHER_BQSR_REPORTS {
     }
 
     input:
-        tuple val(name), path(recal)
+        tuple val(name), path(bam), path(bai), path(intervalBed)
+        path(reference)
+        path(fai)
+        path(dict)
+        path(dbsnp)
+        path(dbsnpIndex)
 
     output:
-        tuple val(name), path('*.table')
+        tuple val(name), path('*.g.vcf.gz'), emit: cram
+
     script:
-    input = recal.collect{"-I ${it}"}.join(' ')
+    def output = options.suffix ? "${name}.${options.suffix}" : "${name}"
+    intervalsOptions = params.no_intervals ? "" : "-L ${intervalBed}"
+    prefix = params.no_intervals ? "" : "${intervalBed.baseName}_"
+    dbsnpOptions = params.dbsnp ? "--D ${dbsnp}" : ""
     """
-    gatk --java-options -Xmx${task.memory.toGiga()}g \
-        GatherBQSRReports \
-        ${input} \
-        -O ${name}.recal.table \
+    gatk HaplotypeCaller \
+       -R ${reference} \
+       -I ${bam} \
+       -O ${prefix}.g.vcf.gz \
+       ${intervalsOptions} \
+        ${dbsnpOptions} \
+        -ERC GVCF
     """
 }

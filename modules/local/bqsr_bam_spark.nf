@@ -3,7 +3,7 @@ include { initOptions; saveFiles; getSoftwareName } from './functions'
 params.options = [:]
 def options    = initOptions(params.options)
 
-process BASERECALIBRATION {
+process BASERECALIBRATION_BAM_SPARK {
     label 'process_medium'
 
     publishDir params.outdir, mode: params.publish_dir_mode,
@@ -11,13 +11,13 @@ process BASERECALIBRATION {
 
     conda (params.enable_conda ? "bioconda::gatk4==4.2.0.0" : null)
     if (workflow.containerEngine == 'singularity' && !params.pull_docker_container) {
-        container "https://depot.galaxyproject.org/singularity/gatk4:4.2.0.0--0" 
+        container "https://depot.galaxyproject.org/singularity/gatk4:4.2.0.0--0"
     } else {
         container "quay.io/biocontainers/gatk4:4.2.0.0--0"
     }
 
     input:
-        tuple val(name), path(cram), path(crai), path(intervalBed)
+        tuple val(name), path(bam), path(bai), path(intervalBed)
         path(reference)
         path(dict)
         path(fastaFai)
@@ -35,8 +35,11 @@ process BASERECALIBRATION {
     prefix = params.no_intervals ? "" : "${intervalBed.baseName}_"
     intervalsOptions = params.no_intervals ? "" : "-L ${intervalBed}"
     """
-    gatk  BaseRecalibrator \
-        -I ${cram} \
+    export SPARK_LOCAL_IP=127.0.0.1
+    export SPARK_PUBLIC_DNS=127.0.0.1
+
+    gatk  BaseRecalibratorSpark \
+        -I ${bam} \
         -O ${prefix}${output}.recal.table \
         --tmp-dir . \
         -R ${reference} \

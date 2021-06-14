@@ -3,7 +3,7 @@ include { initOptions; saveFiles; getSoftwareName } from './functions'
 params.options = [:]
 def options    = initOptions(params.options)
 
-process APPLYBQSR_SPARK {
+process APPLYBQSR_SPARK_CRAM {
     label 'process_medium'
 
     publishDir params.outdir, mode: params.publish_dir_mode,
@@ -11,7 +11,7 @@ process APPLYBQSR_SPARK {
 
     conda (params.enable_conda ? "bioconda::gatk4==4.2.0.0" : null)
     if (workflow.containerEngine == 'singularity' && !params.pull_docker_container) {
-        container "https://depot.galaxyproject.org/singularity/gatk4:4.2.0.0--0" 
+        container "https://depot.galaxyproject.org/singularity/gatk4:4.2.0.0--0"
     } else {
         container "quay.io/biocontainers/gatk4:4.2.0.0--0"
     }
@@ -23,7 +23,7 @@ process APPLYBQSR_SPARK {
         path(dict)
 
     output:
-        tuple val(name), path('*.recal.cram'), emit: cram
+        tuple val(name), path('*.recal.cram')
 
     script:
     def output = options.suffix ? "${name}.${options.suffix}" : "${name}"
@@ -33,12 +33,12 @@ process APPLYBQSR_SPARK {
     """
     export SPARK_LOCAL_IP=127.0.0.1
     export SPARK_PUBLIC_DNS=127.0.0.1
-    
+
     gatk ApplyBQSRSpark \
        -R ${reference} \
        -I ${cram} \
        --bqsr-recal-file ${recalibrationReport} \
        -O ${prefix}.recal.cram \
-       ${intervalsOptions} 
+       ${intervalsOptions}
     """
 }

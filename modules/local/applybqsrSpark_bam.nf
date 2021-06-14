@@ -3,7 +3,7 @@ include { initOptions; saveFiles; getSoftwareName } from './functions'
 params.options = [:]
 def options    = initOptions(params.options)
 
-process GATHER_BQSR_REPORTS {
+process APPLYBQSR_SPARK_BAM {
     label 'process_medium'
 
     publishDir params.outdir, mode: params.publish_dir_mode,
@@ -17,16 +17,28 @@ process GATHER_BQSR_REPORTS {
     }
 
     input:
-        tuple val(name), path(recal)
+        tuple val(name), path(bam), path(bai), path(intervalBed), path(recalibrationReport)
+        path(reference)
+        path(fai)
+        path(dict)
 
     output:
-        tuple val(name), path('*.table')
+        tuple val(name), path('*.recal.bam')
+
     script:
-    input = recal.collect{"-I ${it}"}.join(' ')
+    def output = options.suffix ? "${name}.${options.suffix}" : "${name}"
+    intervalsOptions = params.no_intervals ? "" : "-L ${intervalBed}"
+    prefix = params.no_intervals ? "" : "${intervalBed.baseName}_"
+
     """
-    gatk --java-options -Xmx${task.memory.toGiga()}g \
-        GatherBQSRReports \
-        ${input} \
-        -O ${name}.recal.table \
+    export SPARK_LOCAL_IP=127.0.0.1
+    export SPARK_PUBLIC_DNS=127.0.0.1
+
+    gatk ApplyBQSRSpark \
+       -R ${reference} \
+       -I ${bam} \
+       --bqsr-recal-file ${recalibrationReport} \
+       -O ${prefix}.recal.bam \
+       ${intervalsOptions}
     """
 }
