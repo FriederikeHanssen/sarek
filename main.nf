@@ -138,6 +138,8 @@ params.dict        = params.genome ? params.genomes[params.genome].dict         
 params.intervals   = params.genome ? params.genomes[params.genome].intervals               ?: false : false
 intervals          = params.intervals  ? file(params.intervals)             : file("${params.outdir}/no_file")
 
+intervals.dump()
+
 params.dbsnp   = params.genome ? params.genomes[params.genome].dbsnp               ?: false : false
 dbsnp          = params.dbsnp  ? file(params.dbsnp)             : file("${params.outdir}/no_file")
 
@@ -174,7 +176,7 @@ workflow {
 
     //BEST_WF(ch_input, fasta, intervals, dbsnp, dbsnpIndex, knownIndels, knownIndelsIndex)
 
-    MAP_BENCHMARK(ch_input, fasta)
+    MAP_BENCHMARK(ch_input, fasta, intervals, dbsnp, dbsnpIndex, knownIndels, knownIndelsIndex)
 
 
     /*
