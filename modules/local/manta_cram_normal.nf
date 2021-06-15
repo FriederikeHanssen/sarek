@@ -34,7 +34,7 @@ process MANTA_SINGLE_CRAM {
     """
     ${beforeScript}
     configManta.py \
-        ${inputbam} ${bam} \
+        ${inputbam} ${cram} \
         --reference ${fasta} \
         ${options} \
         --runDir Manta

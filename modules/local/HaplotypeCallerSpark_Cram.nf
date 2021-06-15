@@ -3,6 +3,8 @@ include { initOptions; saveFiles; getSoftwareName } from './functions'
 params.options = [:]
 def options    = initOptions(params.options)
 
+//TODO: not recommended for production work
+
 process HAPLOTYPECALLER_SPARK_CRAM {
     label 'process_high'
 

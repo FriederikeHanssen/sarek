@@ -3,6 +3,7 @@ include { initOptions; saveFiles; getSoftwareName } from './functions'
 params.options = [:]
 def options    = initOptions(params.options)
 
+//TODO: Sp sp about it since it is beta status and won't be released any time soon apparently
 process BQSRSPARKPIPELINE_SPARK_CRAM {
     label 'process_high'
 

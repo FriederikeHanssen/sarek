@@ -80,7 +80,7 @@ include { SAMTOOLS_MPILEUP_BAM } from '../../modules/nf-core/software/samtools/m
 include { SAMTOOLS_MPILEUP_BAM as SAMTOOLS_MPILEUP_CRAM} from '../../modules/nf-core/software/samtools/mpileup/main.nf'
 
 include { TIDDIT_BAM } from '../../modules/local/tiddit_bam.nf'
-include { TIDDIT_CRAM } from '../../modules/local/tiddit_cram.nf'
+//include { TIDDIT_CRAM } from '../../modules/local/tiddit_cram.nf'
 
 include { MANTA_SINGLE_BAM } from '../../modules/local/manta_bam_normal.nf'
 include { MANTA_SINGLE_CRAM } from '../../modules/local/manta_cram_normal.nf'
@@ -140,9 +140,10 @@ workflow MAP_BENCHMARK {
         //mapped_cram = MAP_CRAM.out.groupTuple()
 
         //Name sorted reads (for MD Spark)
-        MD_GATK_SPARK_CRAM(mapped_spark_cram, fasta, dict, faidx)
+        //MD_GATK_SPARK_CRAM(mapped_spark_cram, fasta, dict, faidx)
         MD_GATK_SPARK_BAM(mapped_spark_bam, dict, faidx)
         MD_GATK_SPARK_BAM_TO_CRAM(mapped_spark_bam, fasta, dict, faidx)
+
         ESTIMATE_LIBRARY_COMPLEXITY_BAM(mapped_spark_bam, dict, faidx)
         ESTIMATE_LIBRARY_COMPLEXITY_CRAM(mapped_spark_cram, fasta, dict, faidx)
 
@@ -260,14 +261,14 @@ workflow MAP_BENCHMARK {
 
         haplotypeCaller_Bam = SAMTOOLS_MERGE_INDEX_BAM.out.combine(result_intervals)
         //haplotypeCaller_Bam_spark = SAMTOOLS_MERGE_INDEX_BAM_SPARK.combine(intervals)
-         haplotypeCaller_cram = SAMTOOLS_MERGE_INDEX_CRAM.out.combine(result_intervals)
+        haplotypeCaller_cram = SAMTOOLS_MERGE_INDEX_CRAM.out.combine(result_intervals)
         // haplotypeCaller_cram_spark = SAMTOOLS_MERGE_INDEX_CRAM_SPARK.combine(intervals)
 
         // TODO requires reads to be coordinate sorted, this is ok here as long as we use the onces from w/o spark MAPPING, since they are coordinate sorted
         HAPLOTYPECALLER_BAM(haplotypeCaller_Bam, fasta, faidx, dict, dbsnp, dbsnpIndex)
-        HAPLOTYPECALLER_SPARK_BAM(haplotypeCaller_Bam, fasta, faidx, dict, dbsnp, dbsnpIndex)
+        //HAPLOTYPECALLER_SPARK_BAM(haplotypeCaller_Bam, fasta, faidx, dict, dbsnp, dbsnpIndex)
         HAPLOTYPECALLER_CRAM(haplotypeCaller_cram, fasta, faidx, dict, dbsnp, dbsnpIndex)
-        HAPLOTYPECALLER_SPARK_CRAM(haplotypeCaller_cram, fasta, faidx, dict, dbsnp, dbsnpIndex)
+        // HAPLOTYPECALLER_SPARK_CRAM(haplotypeCaller_cram, fasta, faidx, dict, dbsnp, dbsnpIndex)
 
         // TODO no sorting requiremnts in docs
         STRELKA_GERMLINE_BAM(SAMTOOLS_MERGE_INDEX_BAM.out, fasta, faidx)
@@ -279,7 +280,7 @@ workflow MAP_BENCHMARK {
 
         //TIDDIT BAM + CRAM
         TIDDIT_BAM(SAMTOOLS_MERGE_INDEX_BAM.out,fasta)
-        TIDDIT_CRAM(SAMTOOLS_MERGE_INDEX_CRAM.out,fasta)
+        //TIDDIT_CRAM(SAMTOOLS_MERGE_INDEX_CRAM.out,fasta)
 
         //SAMTOOLS MPILEUP: only bam :(
         SAMTOOLS_MPILEUP_BAM(SAMTOOLS_MERGE_INDEX_BAM.out, fasta)

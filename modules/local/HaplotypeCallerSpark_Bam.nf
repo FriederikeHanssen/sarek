@@ -3,9 +3,10 @@ include { initOptions; saveFiles; getSoftwareName } from './functions'
 params.options = [:]
 def options    = initOptions(params.options)
 
+//TODO: not recommended for production work
 process HAPLOTYPECALLER_SPARK_BAM {
     label 'process_high'
-
+    scratch '/sfs/7/workspace/ws/iizha01-test_splitting-0/sarek/tmp'
     publishDir params.outdir, mode: params.publish_dir_mode,
         saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), publish_id:'') }
 

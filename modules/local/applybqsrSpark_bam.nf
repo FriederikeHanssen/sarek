@@ -3,6 +3,7 @@ include { initOptions; saveFiles; getSoftwareName } from './functions'
 params.options = [:]
 def options    = initOptions(params.options)
 
+//TODO: still in beta bt doesn't state that it shouldn't be used
 process APPLYBQSR_SPARK_BAM {
     label 'process_medium'
 
