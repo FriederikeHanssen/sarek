@@ -39,6 +39,8 @@ process APPLYBQSR_SPARK_CRAM {
        -I ${cram} \
        --bqsr-recal-file ${recalibrationReport} \
        -O ${prefix}.recal.cram \
-       ${intervalsOptions}
+       ${intervalsOptions} \
+        --tmp-dir .
+
     """
 }

@@ -42,6 +42,8 @@ process HAPLOTYPECALLER_SPARK_BAM {
        -I ${bam} \
        -O ${prefix}.g.vcf.gz \
        ${intervalsOptions} \
-        -ERC GVCF
+        -ERC GVCF \
+                --tmp-dir . \
+
     """
 }

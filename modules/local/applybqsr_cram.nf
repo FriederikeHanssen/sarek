@@ -35,6 +35,7 @@ process APPLYBQSR_CRAM {
        -I ${cram} \
        --bqsr-recal-file ${recalibrationReport} \
        -O ${prefix}.recal.cram \
+       --tmp-dir . \
        ${intervalsOptions}
     """
 }

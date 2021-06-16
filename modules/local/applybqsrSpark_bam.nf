@@ -40,6 +40,8 @@ process APPLYBQSR_SPARK_BAM {
        -I ${bam} \
        --bqsr-recal-file ${recalibrationReport} \
        -O ${prefix}.recal.bam \
-       ${intervalsOptions}
+       ${intervalsOptions} \
+        --tmp-dir .
+
     """
 }

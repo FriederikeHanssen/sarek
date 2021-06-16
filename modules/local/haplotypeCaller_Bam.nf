@@ -39,6 +39,7 @@ process HAPLOTYPECALLER_BAM {
        -O ${prefix}.g.vcf.gz \
        ${intervalsOptions} \
         ${dbsnpOptions} \
-        -ERC GVCF
+        -ERC GVCF \
+        --tmp-dir .
     """
 }

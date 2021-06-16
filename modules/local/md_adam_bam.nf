@@ -28,6 +28,7 @@ process MD_ADAM_BAM{
     def software = getSoftwareName(task.process)
 
     """
+    export SPARK_LOCAL_DIRS=.
     adam-submit \
        --master local[${task.cpus}] \
        --driver-memory ${task.memory.toGiga()}g \

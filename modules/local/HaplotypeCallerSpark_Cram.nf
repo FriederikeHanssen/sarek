@@ -43,6 +43,8 @@ process HAPLOTYPECALLER_SPARK_CRAM {
        -I ${cram} \
        -O ${prefix}.g.vcf.gz \
        ${intervalsOptions} \
-        -ERC GVCF
+        -ERC GVCF \
+                --tmp-dir . \
+
     """
 }

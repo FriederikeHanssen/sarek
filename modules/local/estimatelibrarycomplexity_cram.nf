@@ -26,15 +26,15 @@ process ESTIMATE_LIBRARY_COMPLEXITY_CRAM {
         path('*.md.metrics'), emit: report
 
     script:
-    def software = getSoftwareName(task.process)
     def crams = cram.collect(){ x -> "-I ".concat(x.toString()) }.join(" ")
     def output = options.suffix ? "${name}.${options.suffix}" : "${name}"
+    def software = getSoftwareName(task.process)
     """
     gatk EstimateLibraryComplexity \
         ${crams} \
         -O ${output}.md.metrics \
         --REFERENCE_SEQUENCE ${reference} \
         --VALIDATION_STRINGENCY SILENT \
-        --TMP_DIR .
+        --TMP_DIR . $options.args
     """
 }

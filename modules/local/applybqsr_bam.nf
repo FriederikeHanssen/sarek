@@ -35,6 +35,7 @@ process APPLYBQSR_BAM {
        -I ${bam} \
        --bqsr-recal-file ${recalibrationReport} \
        -O ${prefix}.recal.bam \
+       --tmp-dir . \
        ${intervalsOptions}
     """
 }
