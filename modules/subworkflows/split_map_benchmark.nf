@@ -157,7 +157,7 @@ workflow MAP_BENCHMARK {
             //cram_merged = mapped_cram
             bam_merged = mapped_bam
         }
-        MD_ADAM_BAM(bam_merged)
+        //MD_ADAM_BAM(bam_merged)
         //MD_ADAM_CRAM(mapped_spark_cram, fasta)
         MD_SAMBAMBA(bam_merged)
         //TODO: MD SAMTOOLS
