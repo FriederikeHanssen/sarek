@@ -14,7 +14,7 @@ process MD_ADAM_BAM{
     if (workflow.containerEngine == 'singularity' && !params.pull_docker_container) {
         container "https://depot.galaxyproject.org/singularity/adam:0.35.0--hdfd78af_0 "
     } else {
-        container "quay.io/biocontainers/adam:0.35.0--hdfd78af_0 "
+        container "quay.io/biocontainers/adam:0.35.0--hdfd78af_0"
     }
 
     input:
