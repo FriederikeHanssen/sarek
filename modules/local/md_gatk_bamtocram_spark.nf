@@ -22,7 +22,7 @@ process MD_GATK_SPARK_BAM_TO_CRAM {
         path(dict) //need to be present in the path
         path(fai)  //need to be present in the path
 
-    output:å
+    output:
         tuple val(name), path('*.md.cram'), emit: cram
        // path('*.md.metrics'), emit: report
 
