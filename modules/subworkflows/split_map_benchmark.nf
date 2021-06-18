@@ -27,7 +27,7 @@ include { MD_GATK_BAM }                     from '../local/md_gatk_bam.nf'      
 include { MD_GATK_SPARK_BAM }                     from '../local/md_gatk_bam_spark.nf'                      addParams( options: params.md_options  )
 include { MD_GATK_SPARK_CRAM }                     from '../local/md_gatk_cram_spark.nf'                      addParams( options: params.md_options  )
 include { MD_GATK_SPARK_BAM_TO_CRAM }       from '../local/md_gatk_bamtocram_spark.nf'                      addParams( options: params.md_options  )
-//include { MD_ADAM_BAM }                     from '../local/md_adam_bam.nf'                      addParams( options: params.md_options  )
+include { MD_ADAM_BAM }                     from '../local/md_adam_bam.nf'                      addParams( options: params.md_options  )
 //include { MD_ADAM_CRAM }                     from '../local/md_adam_cram.nf'                      addParams( options: params.md_options  )
 
 include { MD_SAMBAMBA }                     from '../local/md_sambamba.nf'                      addParams( options: params.md_options  )
@@ -157,7 +157,7 @@ workflow MAP_BENCHMARK {
             //cram_merged = mapped_cram
             bam_merged = mapped_bam
         }
-        //MD_ADAM_BAM(bam_merged)
+        MD_ADAM_BAM(bam_merged)
         //MD_ADAM_CRAM(mapped_spark_cram, fasta)
         MD_SAMBAMBA(bam_merged)
         //TODO: MD SAMTOOLS

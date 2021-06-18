@@ -27,7 +27,7 @@ process MD_SAMBAMBA{
     def software = getSoftwareName(task.process)
 
     """
-    sambamba markdup --nthreads ${task.cpus} --tmpdir . ${bam} ${bam.simpleName}.sambamba.md.bam
+    sambamba markdup --nthreads ${task.cpus} --hash-table-size 500000 --overflow-list-size 400000 --tmpdir . ${bam} ${bam.simpleName}.sambamba.md.bam
     """
     //hashtablesize: > (average coverage) * (insert size) How to compute this
     //remove duplicates???
