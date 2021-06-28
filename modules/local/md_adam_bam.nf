@@ -9,7 +9,6 @@ process MD_ADAM_BAM{
     publishDir "${params.outdir}",
         mode: params.publish_dir_mode,
         saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:'mark_duplicates', publish_id:'') }
-    scratch '/sfs/7/workspace/ws/iizha01-test_splitting-0/sarek/tmp/'
     conda (params.enable_conda ? "bioconda::adam=0.35.0--0" : null)
     if (workflow.containerEngine == 'singularity' && !params.pull_docker_container) {
         container "https://depot.galaxyproject.org/singularity/adam:0.35.0--hdfd78af_0 "
@@ -29,6 +28,7 @@ process MD_ADAM_BAM{
     //    export SPARK_LOCAL_DIRS=.
 
     """
+     export SPARK_LOCAL_DIRS=.
     adam-submit \
        --master local[${task.cpus}] \
        --driver-memory ${task.memory.toGiga()}g \
