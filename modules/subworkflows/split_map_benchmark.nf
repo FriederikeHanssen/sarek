@@ -130,7 +130,7 @@ workflow MAP_BENCHMARK {
 
         split_reads.dump()
 
-        //MAP_CRAM(split_reads, fasta, index) // only necessary once adam works
+        MAP_CRAM(split_reads, fasta, index) // only necessary once adam works
         MAP_CRAM_SPARK(split_reads, fasta, index)
         MAP_BAM(split_reads, fasta, index)
         MAP_BAM_SPARK(split_reads, fasta, index)
@@ -141,7 +141,7 @@ workflow MAP_BENCHMARK {
         mapped_spark_bam = MAP_BAM_SPARK.out.groupTuple()
         mapped_spark_cram = MAP_CRAM_SPARK.out.groupTuple()
         mapped_bam = MAP_BAM.out.groupTuple()
-        //mapped_cram = MAP_CRAM.out.groupTuple()
+        mapped_cram = MAP_CRAM.out.groupTuple()
 
         //Name sorted reads (for MD Spark)
         MD_GATK_SPARK_CRAM(mapped_spark_cram, fasta, dict, faidx)
