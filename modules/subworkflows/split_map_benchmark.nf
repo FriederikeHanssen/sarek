@@ -35,7 +35,11 @@ include { MD_SAMBAMBA }                     from '../local/md_sambamba.nf'      
 include { ESTIMATE_LIBRARY_COMPLEXITY_CRAM } from '../local/estimatelibrarycomplexity_cram'       addParams( options: params.estimate_lib_complexity_options  )
 include { ESTIMATE_LIBRARY_COMPLEXITY_BAM } from '../local/estimatelibrarycomplexity_bam'       addParams( options: params.estimate_lib_complexity_options  )
 
+include { QUALIMAP_BAMQC } from '../../modules/nf-core/bamqc/main.nf'
+include { QUALIMAP_BAMQC_CRAM } from '../../modules/nf-core/bamqc_cram/main.nf'
+
 include {INDEX_CRAM }                   from '../local/samtools_index_cram'
+
 include { BASERECALIBRATION_BAM }                     from '../local/bqsr_bam.nf'                  addParams( options: params.bqsr_options )
 include { BASERECALIBRATION_CRAM }                     from '../local/bqsr_cram.nf'                  addParams( options: params.bqsr_options  )
 include { BASERECALIBRATION_BAM_SPARK }                     from '../local/bqsr_bam_spark.nf'                  addParams( options: params.bqsr_options )
@@ -140,7 +144,7 @@ workflow MAP_BENCHMARK {
         //mapped_cram = MAP_CRAM.out.groupTuple()
 
         //Name sorted reads (for MD Spark)
-        //MD_GATK_SPARK_CRAM(mapped_spark_cram, fasta, dict, faidx)
+        MD_GATK_SPARK_CRAM(mapped_spark_cram, fasta, dict, faidx)
         MD_GATK_SPARK_BAM(mapped_spark_bam, dict, faidx)
         MD_GATK_SPARK_BAM_TO_CRAM(mapped_spark_bam, fasta, dict, faidx)
 
@@ -151,7 +155,7 @@ workflow MAP_BENCHMARK {
         MD_GATK_BAM(mapped_bam,dict, faidx)
 
         if(params.parts > 1){
-            //cram_merged = SAMTOOLS_MERGE_CRAM(mapped_cram, fasta)
+            cram_merged = SAMTOOLS_MERGE_CRAM(mapped_cram, fasta)
             bam_merged = MERGE_BAM(mapped_bam)
         }else{
             //cram_merged = mapped_cram
@@ -162,7 +166,13 @@ workflow MAP_BENCHMARK {
         MD_SAMBAMBA(bam_merged)
         //TODO: MD SAMTOOLS
 
+
+
         INDEX_CRAM(MD_GATK_SPARK_BAM_TO_CRAM.out)
+
+        QUALIMAP_BAMQC(MD_GATK_BAM.out)
+        QUALIMAP_BAMQC_CRAM(INDEX_CRAM.out, fasta, faidx)
+
         CREATE_INTERVALS_BED(intervals)
         result_intervals = CREATE_INTERVALS_BED.out.flatten()
             .map { intervalFile ->

@@ -26,7 +26,7 @@ process SPLIT_FASTQ{
     script:
     def software = getSoftwareName(task.process)
     """
-    seqkit split2 --threads ${task.cpus} --by-part ${params.parts} -O . -1 $read1 -2 $read2
+    seqkit split2 --threads ${task.cpus} --by-size ${params.parts} -O . -1 $read1 -2 $read2
     echo \$(seqkit --version 2>&1) > ${software}.version.txt
     """
 }
