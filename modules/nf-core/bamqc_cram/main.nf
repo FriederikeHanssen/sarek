@@ -24,7 +24,7 @@ process QUALIMAP_BAMQC_CRAM{ // Import generic module functions {
     path fai
 
     output:
-    tuple val(meta), path("${prefix}"), emit: results
+    tuple val(name), path("${prefix}"), emit: results
     path  "*.version.txt"             , emit: version
 
     script:
