@@ -46,7 +46,6 @@ process QUALIMAP_BAMQC_CRAM{ // Import generic module functions {
         bamqc \\
         $options.args \\
         -bam /dev/stdin \\
-        $regions \\
         $collect_pairs \\
         -outdir $prefix \\
         -nt $task.cpus
