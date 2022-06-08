@@ -61,12 +61,6 @@ for (param in checkPathParamList) if (param) file(param, checkIfExists: true)
 //     // }
 // }
 
-println params.input
-f = file(params.input, checkIfExists: true)
-//println f
-ch_input_sample = extract_csv(f)
-
-
 if (params.wes) {
     if (params.intervals && !params.intervals.endsWith("bed")) exit 1, "Target file must be in BED format"
 } else {
@@ -134,6 +128,9 @@ if (params.spliceai_snv && params.spliceai_snv_tbi && params.spliceai_indel && p
 
 // Initialize value channels based on params, not defined within the params.genomes[params.genome] scope
 umi_read_structure = params.umi_read_structure ? "${params.umi_read_structure} ${params.umi_read_structure}" : Channel.empty()
+
+// Read input csv. defined by config params.input or found via the --step params
+ch_input_sample = extract_csv(file(params.input, checkIfExists: true))
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
