@@ -4,8 +4,9 @@
 // For all modules here:
 // A when clause condition is defined in the conf/modules.config to determine if the module should be run
 
-include { GATK4_MARKDUPLICATES } from '../../../../modules/nf-core/modules/gatk4/markduplicates/main'
-include { BAM_TO_CRAM          } from '../../bam_to_cram'
+include { SAMBAMBA_MARKDUP                       } from '../../../../modules/local/sambamba'
+include { BAM_TO_CRAM                            } from '../../bam_to_cram'
+//include { BIOBAMBAM_BAMSORMADUP                  } from '../../../../modules/nf-core/modules/biobambam/bamsormadup/main'
 
 workflow MARKDUPLICATES {
     take:
@@ -19,17 +20,19 @@ workflow MARKDUPLICATES {
     qc_reports  = Channel.empty()
 
     // Run Markupduplicates
-    GATK4_MARKDUPLICATES(bam)
+    SAMBAMBA_MARKDUP(bam)
+    //BIOBAMBAM_BAMSORMADUP(bam, fasta)
 
     // Convert output to cram
-    BAM_TO_CRAM(GATK4_MARKDUPLICATES.out.bam.join(GATK4_MARKDUPLICATES.out.bai), Channel.empty(), fasta, fasta_fai, intervals_bed_combined)
+    BAM_TO_CRAM(SAMBAMBA_MARKDUP.out.bam.join(SAMBAMBA_MARKDUP.out.bai), Channel.empty(), fasta, fasta_fai, intervals_bed_combined)
 
     // Gather all reports generated
-    qc_reports = qc_reports.mix(GATK4_MARKDUPLICATES.out.metrics,
+    qc_reports = qc_reports.mix(SAMBAMBA_MARKDUP.out.metrics,
+                                //BIOBAMBAM_BAMSORMADUP.out.metrics,
                                 BAM_TO_CRAM.out.qc)
 
     // Gather versions of all tools used
-    ch_versions = ch_versions.mix(GATK4_MARKDUPLICATES.out.versions.first())
+    ch_versions = ch_versions.mix(SAMBAMBA_MARKDUP.out.versions.first())
     ch_versions = ch_versions.mix(BAM_TO_CRAM.out.versions)
 
     emit:
