@@ -784,7 +784,7 @@ workflow SAREK {
                     intervals)
 
                 ch_cram_variant_calling_no_spark = RECALIBRATE.out.cram
-
+                ch_cram_variant_calling_no_spark.view()
                 // Gather used softwares versions
                 ch_versions = ch_versions.mix(RECALIBRATE.out.versions)
             }
