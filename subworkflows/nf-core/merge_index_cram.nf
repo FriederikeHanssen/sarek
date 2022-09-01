@@ -40,7 +40,7 @@ workflow MERGE_INDEX_CRAM {
     INDEX_CRAM(ch_cram_to_merge.single.mix(MERGE_CRAM.out.cram))
 
     cram_crai = ch_cram_to_merge.single
-        .mix(MERGE_CRAM.out.cram)
+        .mix(MERGE_CRAM.out.bam)
         .join(INDEX_CRAM.out.bai)
 
     // Gather versions of all tools used
