@@ -655,18 +655,18 @@ workflow SAREK {
         if(params.step == 'prepare_recalibration'){
 
             //Support if starting from BAM or CRAM files
-            ch_input_sample.branch{
-                bam: it[0].data_type == "bam"
-                cram: it[0].data_type == "cram"
-            }.set{ch_convert}
+            // ch_input_sample.branch{
+            //     bam: it[0].data_type == "bam"
+            //     cram: it[0].data_type == "cram"
+            // }.set{ch_convert}
 
-            //BAM files first must be converted to CRAM files since from this step on we base everything on CRAM format
-            SAMTOOLS_BAMTOCRAM(ch_convert.bam, fasta, fasta_fai)
-            ch_versions = ch_versions.mix(SAMTOOLS_BAMTOCRAM.out.versions)
+            // //BAM files first must be converted to CRAM files since from this step on we base everything on CRAM format
+            // SAMTOOLS_BAMTOCRAM(ch_convert.bam, fasta, fasta_fai)
+            // ch_versions = ch_versions.mix(SAMTOOLS_BAMTOCRAM.out.versions)
 
-            ch_cram_for_prepare_recalibration = Channel.empty().mix(SAMTOOLS_BAMTOCRAM.out.alignment_index, ch_convert.cram)
+            ch_cram_for_prepare_recalibration = ch_input_sample //Channel.empty().mix(SAMTOOLS_BAMTOCRAM.out.alignment_index, ch_convert.cram)
 
-            ch_md_cram_for_restart = SAMTOOLS_BAMTOCRAM.out.alignment_index
+            ch_md_cram_for_restart = ch_input_sample //SAMTOOLS_BAMTOCRAM.out.alignment_index
 
         } else {
 
@@ -831,16 +831,16 @@ workflow SAREK {
 
     if (params.step == 'variant_calling') {
 
-        ch_input_sample.branch{
-                bam: it[0].data_type == "bam"
-                cram: it[0].data_type == "cram"
-            }.set{ch_convert}
+        // ch_input_sample.branch{
+        //         bam: it[0].data_type == "bam"
+        //         cram: it[0].data_type == "cram"
+        //     }.set{ch_convert}
 
-        //BAM files first must be converted to CRAM files since from this step on we base everything on CRAM format
-        SAMTOOLS_BAMTOCRAM_VARIANTCALLING(ch_convert.bam, fasta, fasta_fai)
-        ch_versions = ch_versions.mix(SAMTOOLS_BAMTOCRAM_VARIANTCALLING.out.versions)
+        // //BAM files first must be converted to CRAM files since from this step on we base everything on CRAM format
+        // SAMTOOLS_BAMTOCRAM_VARIANTCALLING(ch_convert.bam, fasta, fasta_fai)
+        // ch_versions = ch_versions.mix(SAMTOOLS_BAMTOCRAM_VARIANTCALLING.out.versions)
 
-        ch_cram_variant_calling = Channel.empty().mix(SAMTOOLS_BAMTOCRAM_VARIANTCALLING.out.alignment_index, ch_convert.cram)
+        ch_cram_variant_calling = ch_input_sample //Channel.empty().mix(SAMTOOLS_BAMTOCRAM_VARIANTCALLING.out.alignment_index, ch_convert.cram)
 
     }
 
