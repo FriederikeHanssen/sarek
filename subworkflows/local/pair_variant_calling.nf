@@ -242,7 +242,7 @@ workflow PAIR_VARIANT_CALLING {
 
     if (tools.split(',').contains('mutect2')) {
         cram_pair_mutect2 = cram_pair_intervals.map{ meta, normal_cram, normal_crai, tumor_cram, tumor_crai, intervals ->
-                                [meta, [normal_cram[0], tumor_cram[0]], [normal_crai, tumor_crai], intervals]
+                                [meta, [normal_cram, tumor_cram], [normal_crai, tumor_crai], intervals]
                             }
         cram_pair_mutect2.view()
         GATK_TUMOR_NORMAL_SOMATIC_VARIANT_CALLING(
