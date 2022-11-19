@@ -19,7 +19,7 @@ workflow CHANNEL_BASERECALIBRATOR_CREATE_CSV {
                 suffix_aligned = params.save_output_as_bam ? "bam" : "cram"
                 suffix_index   = params.save_output_as_bam ? "bam.bai" : "cram.crai"
                 cram = "${params.outdir}/preprocessing/markduplicates/${sample}/${cram.baseName}.${suffix_aligned}"
-                crai = "${params.outdir}/preprocessing/markduplicates/${sample}/${crai.baseName.minus(".cram")}.${suffix_index}"
+                crai = "${params.outdir}/preprocessing/markduplicates/${sample}/${crai.baseName.minus(".bam")}.${suffix_index}"
                 table = "${params.outdir}/preprocessing/recal_table/${sample}/${sample}.recal.table"
 
                 type = params.save_output_as_bam ? "bam" : "cram"
@@ -36,11 +36,9 @@ workflow CHANNEL_BASERECALIBRATOR_CREATE_CSV {
                 suffix_aligned = params.save_output_as_bam ? "bam" : "cram"
                 suffix_index   = params.save_output_as_bam ? "bam.bai" : "cram.crai"
                 cram = "${params.outdir}/preprocessing/${sample}/mapped/${cram.baseName}.${suffix_aligned}"
-                crai = "${params.outdir}/preprocessing/${sample}/mapped/${crai.baseName.minus(".cram")}.${suffix_index}"
+                crai = "${params.outdir}/preprocessing/${sample}/mapped/${crai.baseName.minus(".bam")}.${suffix_index}"
                 table = "${params.outdir}/preprocessing/${sample}/recal_table/${sample}.recal.table"
 
-                type = params.save_output_as_bam ? "bam" : "cram"
-                type_index = params.save_output_as_bam ? "bai" : "crai"
 
                 ["sorted.csv", "patient,sex,status,sample,${type},${type_index},table\n${patient},${sex},${status},${sample},${cram},${crai},${table}\n"]
             }

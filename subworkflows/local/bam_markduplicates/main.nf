@@ -21,10 +21,10 @@ workflow BAM_MARKDUPLICATES {
 
     // Run Markupduplicates
     GATK4_MARKDUPLICATES(bam, fasta, fasta_fai)
-    INDEX_MARKDUPLICATES(GATK4_MARKDUPLICATES.out.cram)
+    INDEX_MARKDUPLICATES(GATK4_MARKDUPLICATES.out.bam)
 
-    cram_markduplicates = GATK4_MARKDUPLICATES.out.cram
-        .join(INDEX_MARKDUPLICATES.out.crai)
+    cram_markduplicates = GATK4_MARKDUPLICATES.out.bam
+        .join(INDEX_MARKDUPLICATES.out.bai)
 
     // Convert output to cram
     CRAM_QC_MOSDEPTH_SAMTOOLS(cram_markduplicates, fasta, fasta_fai, intervals_bed_combined)

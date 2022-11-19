@@ -570,7 +570,7 @@ workflow SAREK {
             // Convert any input BAMs to CRAM
             BAM_TO_CRAM(ch_convert.bam, fasta, fasta_fai)
             if(params.skip_tools && params.skip_tools.split(',').contains('markduplicates')){
-                ch_cram_skip_markduplicates = Channel.empty().mix(ch_convert.cram, BAM_TO_CRAM.out.alignment_index)
+                ch_cram_skip_markduplicates = Channel.empty().mix(ch_convert.bam, BAM_TO_CRAM.out.alignment_index)
             }
 
             // Should it be possible to restart from converted crams?
@@ -677,7 +677,7 @@ workflow SAREK {
                                                             cram, crai]
                                                     }
 
-            ch_cram_for_bam_baserecalibrator = Channel.empty().mix(ch_cram_from_bam, ch_convert.cram)
+            ch_cram_for_bam_baserecalibrator = Channel.empty().mix(ch_cram_from_bam, ch_convert.bam)
             ch_md_cram_for_restart = ch_cram_from_bam
 
         } else {
@@ -776,7 +776,7 @@ workflow SAREK {
 
             ch_cram_applybqsr = Channel.empty().mix(
                                     BAM_TO_CRAM.out.alignment_index.join(ch_bam_table),
-                                    ch_convert.cram) // Join together converted cram with input tables
+                                    ch_convert.bam) // Join together converted cram with input tables
         }
 
         if (!(params.skip_tools && params.skip_tools.split(',').contains('baserecalibrator'))) {
@@ -845,7 +845,7 @@ workflow SAREK {
             // - input bams converted to crams, if started from step recal + skip BQSR
             // - input crams if started from step recal + skip BQSR
             ch_cram_variant_calling = Channel.empty().mix(BAM_TO_CRAM.out.alignment_index,
-                                                        ch_convert.cram.map{ meta, cram, crai, table -> [meta, cram, crai]})
+                                                        ch_convert.bam.map{ meta, cram, crai, table -> [meta, cram, crai]})
         } else {
             // ch_cram_variant_calling contains either:
             // - crams from markduplicates = ch_cram_for_bam_baserecalibrator if skip BQSR but not started from step recalibration
@@ -864,7 +864,7 @@ workflow SAREK {
         BAM_TO_CRAM(ch_convert.bam, fasta, fasta_fai)
         ch_versions = ch_versions.mix(BAM_TO_CRAM.out.versions)
 
-        ch_cram_variant_calling = Channel.empty().mix(BAM_TO_CRAM.out.alignment_index, ch_convert.cram)
+        ch_cram_variant_calling = Channel.empty().mix(BAM_TO_CRAM.out.alignment_index, ch_convert.bam)
 
     }
 

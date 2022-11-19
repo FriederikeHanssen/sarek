@@ -38,11 +38,11 @@ workflow CRAM_MERGE_INDEX_SAMTOOLS {
     }
 
     MERGE_CRAM(ch_cram_to_merge.multiple, fasta, fasta_fai)
-    INDEX_CRAM(ch_cram_to_merge.single.mix(MERGE_CRAM.out.cram))
+    INDEX_CRAM(ch_cram_to_merge.single.mix(MERGE_CRAM.out.bam))
 
     cram_crai = ch_cram_to_merge.single.map{meta, cram -> [meta, cram[0]]}
-        .mix(MERGE_CRAM.out.cram)
-        .join(INDEX_CRAM.out.crai)
+        .mix(MERGE_CRAM.out.bam)
+        .join(INDEX_CRAM.out.bai)
 
     // Gather versions of all tools used
     ch_versions = ch_versions.mix(INDEX_CRAM.out.versions.first())
