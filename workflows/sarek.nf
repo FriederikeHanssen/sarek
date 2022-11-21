@@ -771,11 +771,11 @@ workflow SAREK {
             ch_bam_bam   = ch_convert.bam.map{ meta, bam, bai, table -> [meta, bam, bai]}
 
             //BAM files first must be converted to CRAM files since from this step on we base everything on CRAM format
-            BAM_TO_CRAM(ch_bam_bam, fasta, fasta_fai)
-            ch_versions = ch_versions.mix(BAM_TO_CRAM.out.versions)
+            //BAM_TO_CRAM(ch_bam_bam, fasta, fasta_fai)
+            //ch_versions = ch_versions.mix(BAM_TO_CRAM.out.versions)
 
             ch_cram_applybqsr = Channel.empty().mix(
-                                    BAM_TO_CRAM.out.alignment_index.join(ch_bam_table),
+                                    //BAM_TO_CRAM.out.alignment_index.join(ch_bam_table),
                                     ch_convert.bam) // Join together converted cram with input tables
         }
 
