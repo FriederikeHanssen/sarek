@@ -275,6 +275,9 @@ include { VCF_QC_BCFTOOLS_VCFTOOLS                       } from '../subworkflows
 // Annotation
 include { VCF_ANNOTATE_ALL                               } from '../subworkflows/local/vcf_annotate_all/main'
 
+// Validation (experimental)
+include { VCF_VALIDATE_SMALL_VARIANTS                    } from '../subworkflows/nf-core/vcf_eval/main'
+
 // REPORTING VERSIONS OF SOFTWARE USED
 include { CUSTOM_DUMPSOFTWAREVERSIONS                    } from '../modules/nf-core/custom/dumpsoftwareversions/main'
 
@@ -1014,6 +1017,10 @@ workflow SAREK {
         // vcf_to_annotate = vcf_to_annotate.mix(BAM_VARIANT_CALLING_GERMLINE_ALL.out.vcf_mpileup) // Not annotated?
         vcf_to_annotate = vcf_to_annotate.mix(BAM_VARIANT_CALLING_TUMOR_ONLY_ALL.out.vcf_all)
         vcf_to_annotate = vcf_to_annotate.mix(BAM_VARIANT_CALLING_SOMATIC_ALL.out.vcf_all)
+
+        if(params.benchmark) {
+            VCF_VALIDATE_SMALL_VARIANTS(BAM_VARIANT_CALLING_GERMLINE_ALL.out.vcf_all)
+        }
 
         // Gather used softwares versions
         versions = versions.mix(BAM_VARIANT_CALLING_GERMLINE_ALL.out.versions)

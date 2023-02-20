@@ -288,6 +288,11 @@
                         "git_sha": "c8e35eb2055c099720a75538d1b8adb3fb5a464c",
                         "installed_by": ["modules"]
                     },
+                    "happy/happy": {
+                        "branch": "master",
+                        "git_sha": "bf78e7d93f5d08ed464f74ba85a03b2ad6112f04",
+                        "installed_by": ["modules"]
+                    },
                     "manta/germline": {
                         "branch": "master",
                         "git_sha": "c8e35eb2055c099720a75538d1b8adb3fb5a464c",
@@ -321,6 +326,16 @@
                     "multiqc": {
                         "branch": "master",
                         "git_sha": "ee80d14721e76e2e079103b8dcd5d57129e584ba",
+                        "installed_by": ["modules"]
+                    },
+                    "rtgtools/rocplot": {
+                        "branch": "master",
+                        "git_sha": "94db1a531781edffada2cd3ea0913937a605eb48",
+                        "installed_by": ["modules"]
+                    },
+                    "rtgtools/vcfeval": {
+                        "branch": "master",
+                        "git_sha": "1274846bc23f0a07cc7e2bce8c6030923143da00",
                         "installed_by": ["modules"]
                     },
                     "samblaster": {
