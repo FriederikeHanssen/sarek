@@ -1,5 +1,4 @@
 include { BAM_MERGE_INDEX_SAMTOOLS                 } from '../bam_merge_index_samtools/main'
-include { VCF_VARIANT_FILTERING_GATK               } from '../vcf_variant_filtering_gatk/main'
 include { GATK4_HAPLOTYPECALLER                    } from '../../../modules/nf-core/gatk4/haplotypecaller/main'
 include { GATK4_MERGEVCFS as MERGE_HAPLOTYPECALLER } from '../../../modules/nf-core/gatk4/mergevcfs/main'
 
@@ -81,22 +80,8 @@ workflow BAM_VARIANT_CALLING_HAPLOTYPECALLER {
 
     realigned_bam = BAM_MERGE_INDEX_SAMTOOLS.out.bam_bai
 
-    if (!skip_haplotypecaller_filter) {
-
-        VCF_VARIANT_FILTERING_GATK(
-            haplotypecaller_vcf.join(haplotypecaller_tbi, failOnDuplicate: true, failOnMismatch: true),
-            fasta,
-            fasta_fai,
-            dict.map{ meta, dict -> [ dict ] },
-            intervals_bed_combined,
-            known_sites_indels.concat(known_sites_snps).flatten().unique().collect(),
-            known_sites_indels_tbi.concat(known_sites_snps_tbi).flatten().unique().collect())
-
-        vcf = VCF_VARIANT_FILTERING_GATK.out.filtered_vcf
-
-        versions = versions.mix(VCF_VARIANT_FILTERING_GATK.out.versions)
-
-    } else vcf = haplotypecaller_vcf
+    vcf = haplotypecaller_vcf
+    tbi = haplotypecaller_tbi
 
     versions = versions.mix(GATK4_HAPLOTYPECALLER.out.versions)
     versions = versions.mix(MERGE_HAPLOTYPECALLER.out.versions)
@@ -108,6 +93,7 @@ workflow BAM_VARIANT_CALLING_HAPLOTYPECALLER {
     genotype_intervals // For joint genotyping
     realigned_bam      // Optionnal
     vcf                // vcf filtered or not
+    tbi
 
     versions
 }

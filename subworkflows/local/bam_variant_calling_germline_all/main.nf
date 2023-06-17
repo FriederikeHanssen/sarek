@@ -2,15 +2,16 @@
 // GERMLINE VARIANT CALLING
 //
 
-include { BAM_JOINT_CALLING_GERMLINE_GATK     } from '../bam_joint_calling_germline_gatk/main'
-include { BAM_VARIANT_CALLING_CNVKIT          } from '../bam_variant_calling_cnvkit/main'
-include { BAM_VARIANT_CALLING_DEEPVARIANT     } from '../bam_variant_calling_deepvariant/main'
-include { BAM_VARIANT_CALLING_FREEBAYES       } from '../bam_variant_calling_freebayes/main'
-include { BAM_VARIANT_CALLING_GERMLINE_MANTA  } from '../bam_variant_calling_germline_manta/main'
-include { BAM_VARIANT_CALLING_HAPLOTYPECALLER } from '../bam_variant_calling_haplotypecaller/main'
-include { BAM_VARIANT_CALLING_MPILEUP         } from '../bam_variant_calling_mpileup/main'
-include { BAM_VARIANT_CALLING_SINGLE_STRELKA  } from '../bam_variant_calling_single_strelka/main'
-include { BAM_VARIANT_CALLING_SINGLE_TIDDIT   } from '../bam_variant_calling_single_tiddit/main'
+include { BAM_VARIANT_CALLING_CNVKIT                          } from '../bam_variant_calling_cnvkit/main'
+include { BAM_VARIANT_CALLING_DEEPVARIANT                     } from '../bam_variant_calling_deepvariant/main'
+include { BAM_VARIANT_CALLING_FREEBAYES                       } from '../bam_variant_calling_freebayes/main'
+include { BAM_VARIANT_CALLING_GERMLINE_MANTA                  } from '../bam_variant_calling_germline_manta/main'
+include { BAM_VARIANT_CALLING_HAPLOTYPECALLER                 } from '../bam_variant_calling_haplotypecaller/main'
+include { BAM_VARIANT_CALLING_MPILEUP                         } from '../bam_variant_calling_mpileup/main'
+include { BAM_VARIANT_CALLING_SINGLE_STRELKA                  } from '../bam_variant_calling_single_strelka/main'
+include { BAM_VARIANT_CALLING_SINGLE_TIDDIT                   } from '../bam_variant_calling_single_tiddit/main'
+include { VCF_VARIANT_FILTERING_HAPLOTYPECALLER_SINGLE_SAMPLE } from '../vcf_variant_filtering_gatk/main'
+include { VCF_JOINT_CALLING_GERMLINE_GATK                     } from '../vcf_joint_calling_germline_gatk/main'
 
 workflow BAM_VARIANT_CALLING_GERMLINE_ALL {
     take:
@@ -128,7 +129,7 @@ workflow BAM_VARIANT_CALLING_GERMLINE_ALL {
         versions = versions.mix(BAM_VARIANT_CALLING_HAPLOTYPECALLER.out.versions)
 
         if (joint_germline) {
-            BAM_JOINT_CALLING_GERMLINE_GATK(
+            VCF_JOINT_CALLING_GERMLINE_GATK(
                 BAM_VARIANT_CALLING_HAPLOTYPECALLER.out.genotype_intervals,
                 fasta,
                 fasta_fai,
@@ -145,8 +146,22 @@ workflow BAM_VARIANT_CALLING_GERMLINE_ALL {
 
             vcf_haplotypecaller = BAM_JOINT_CALLING_GERMLINE_GATK.out.genotype_vcf
             versions = versions.mix(BAM_JOINT_CALLING_GERMLINE_GATK.out.versions)
-        }
 
+        } else if (!skip_haplotypecaller_filter) {
+
+            VCF_VARIANT_FILTERING_HAPLOTYPECALLER_SINGLE_SAMPLE(
+            vcf_haplotypecaller.join(BAM_VARIANT_CALLING_HAPLOTYPECALLER.out.tbi, failOnDuplicate: true, failOnMismatch: true),
+            fasta,
+            fasta_fai,
+            dict.map{ meta, dict -> [ dict ] },
+            intervals_bed_combined,
+            known_sites_indels.concat(known_sites_snps).flatten().unique().collect(),
+            known_sites_indels_tbi.concat(known_sites_snps_tbi).flatten().unique().collect())
+
+            vcf_haplotypecaller = VCF_VARIANT_FILTERING_HAPLOTYPECALLER_SINGLE_SAMPLE.out.filtered_vcf
+            versions = versions.mix(VCF_VARIANT_FILTERING_HAPLOTYPECALLER_SINGLE_SAMPLE.out.versions)
+
+        }
     }
 
     // MANTA
