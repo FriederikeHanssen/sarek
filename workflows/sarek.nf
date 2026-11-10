@@ -280,6 +280,8 @@ workflow SAREK {
         fasta.combine(fasta_fai).map { meta_fasta_, fasta_file, _meta_fai, fai -> [meta_fasta_, fasta_file, fai] }.collect(),
         SarekUtils.hasTool(skip_tools, 'baserecalibrator'),
         intervals_for_preprocessing,
+        skip_tools,
+        tools,
     )
 
     reports = reports.mix(CRAM_SAMPLEQC.out.reports)
@@ -519,6 +521,7 @@ workflow SAREK {
         VCF_QC_BCFTOOLS_VCFTOOLS(
             BAM_VARIANT_CALLING_GERMLINE_ALL.out.vcf_all.mix(BAM_VARIANT_CALLING_TUMOR_ONLY_ALL.out.vcf_all).mix(BAM_VARIANT_CALLING_SOMATIC_ALL.out.vcf_all),
             intervals_bed_combined,
+            skip_tools,
         )
 
         reports = reports.mix(VCF_QC_BCFTOOLS_VCFTOOLS.out.bcftools_stats.collect { _meta, stats -> [stats] })

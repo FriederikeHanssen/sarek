@@ -2,7 +2,6 @@
 // MARKDUPLICATES SPARK AND QC after mapping
 //
 // For all modules here:
-// A when clause condition is defined in the conf/modules.config to determine if the module should be run
 
 include { CRAM_QC_MOSDEPTH_SAMTOOLS                               } from '../cram_qc_mosdepth_samtools/main'
 include { GATK4_ESTIMATELIBRARYCOMPLEXITY                         } from '../../../modules/nf-core/gatk4/estimatelibrarycomplexity/main'
@@ -16,6 +15,7 @@ workflow BAM_MARKDUPLICATES_SPARK {
     fasta                         // channel: [mandatory] fasta
     fasta_fai                     // channel: [mandatory] fasta_fai
     intervals_bed_combined        // channel: [optional]  intervals_bed
+    skip_tools                    // string:  [mandatory] lowercased --skip_tools
 
     main:
     reports = channel.empty()
@@ -31,13 +31,15 @@ workflow BAM_MARKDUPLICATES_SPARK {
         .join(INDEX_MARKDUPLICATES.out.index, failOnDuplicate: true, failOnMismatch: true)
 
     // QC on alignment
-    CRAM_QC_MOSDEPTH_SAMTOOLS(alignment, fasta, fasta_fai, intervals_bed_combined)
+    CRAM_QC_MOSDEPTH_SAMTOOLS(alignment, fasta, fasta_fai, intervals_bed_combined, skip_tools)
 
     // When running Marduplicates spark, and saving reports
-    GATK4_ESTIMATELIBRARYCOMPLEXITY(bam, fasta.map{ _meta, fasta_ -> [ fasta_ ] }, fasta_fai.map{ _meta, fasta_fai_ -> [ fasta_fai_ ] }, dict.map{ _meta, dict_ -> [ dict_ ] })
+    if (!SarekUtils.hasTool(skip_tools, 'markduplicates_report')) {
+        GATK4_ESTIMATELIBRARYCOMPLEXITY(bam, fasta.map{ _meta, fasta_ -> [ fasta_ ] }, fasta_fai.map{ _meta, fasta_fai_ -> [ fasta_fai_ ] }, dict.map{ _meta, dict_ -> [ dict_ ] })
+        reports = reports.mix(GATK4_ESTIMATELIBRARYCOMPLEXITY.out.metrics)
+    }
 
     // Gather all reports generated
-    reports = reports.mix(GATK4_ESTIMATELIBRARYCOMPLEXITY.out.metrics)
     reports = reports.mix(CRAM_QC_MOSDEPTH_SAMTOOLS.out.reports)
 
 
